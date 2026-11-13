@@ -88,3 +88,7 @@ Local subprocess agents run with your permissions; this runner is not an untrust
 Open a PR with an agent, an evaluation, a failure case, or a proposed future benchmark version. Read [CONTRIBUTING.md](CONTRIBUTING.md). Keep existing versioned rules stable; increased difficulty belongs in a reviewed new tier/version. Agent names are self-reported. Reproducibility is not proof of policy identity or generalization; public seeds can be overfit. Hidden-seed tournaments and authenticated teams are future work.
 
 Apache-2.0 licensed. Synthetic research environment; not for controlling real aircraft.
+
+### Observation-only forecasting controller
+
+`node examples/mcp_forecast.mjs 1` enters a real hosted competition through MCP (replace 1 with the desired tier). It forecasts only observed aircraft, clears low-fuel traffic when all active approaches remain safe, and publishes eligible results. It never reads future arrival manifests or calls a paid model. This is a script controller, not an independently evaluated language-model policy.

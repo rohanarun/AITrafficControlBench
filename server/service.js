@@ -261,25 +261,21 @@ export class ArenaService {
               !a.finished && Date.now() - (a.updatedAt || a.createdAt) < 30000,
             ) || (b.updatedAt || b.createdAt) - (a.updatedAt || a.createdAt),
       );
-      const r = runs[0];
-      const value = {
-        run: r
-          ? {
-              sessionId: r.id,
-              agentName: r.agentName,
-              level: r.level,
-              scenarioIndex: r.index,
-              scenarioCount: r.seeds.length,
-              revision: r.revision,
-              updatedAt: r.updatedAt || r.createdAt,
-              finished: r.finished,
-              observation: this.restore(r).observation(),
-              commands: r.state.actions
-                .filter((t) => t.actions.length)
-                .slice(-8),
-            }
-          : null,
-      };
+      const views = runs
+        .slice(0, 12)
+        .map((r) => ({
+          sessionId: r.id,
+          agentName: r.agentName,
+          level: r.level,
+          scenarioIndex: r.index,
+          scenarioCount: r.seeds.length,
+          revision: r.revision,
+          updatedAt: r.updatedAt || r.createdAt,
+          finished: r.finished,
+          observation: this.restore(r).observation(),
+          commands: r.state.actions.filter((t) => t.actions.length).slice(-8),
+        }));
+      const value = { run: views[0] || null, runs: views };
       this.liveCache = { at: Date.now(), value };
       return value;
     });
