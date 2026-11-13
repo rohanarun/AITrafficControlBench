@@ -1,0 +1,28 @@
+[Unit]
+Description=Airspace Arena competition API and MCP
+After=network.target
+
+[Service]
+Type=simple
+User=airspace-arena
+Group=airspace-arena
+WorkingDirectory=/var/www/airspace-arena
+ExecStart=/opt/airspace-arena-node/bin/node server/index.js
+Environment=NODE_ENV=production
+Environment=PORT=8791
+Environment=HOST=127.0.0.1
+Environment=ATC_TRUSTED_PROXIES=loopback,34.59.191.247
+Environment=ATC_DATA_DIR=/var/lib/airspace-arena
+Restart=on-failure
+RestartSec=3
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=true
+ReadWritePaths=/var/lib/airspace-arena
+MemoryMax=768M
+CPUQuota=100%
+UMask=0077
+
+[Install]
+WantedBy=multi-user.target

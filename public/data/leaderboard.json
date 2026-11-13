@@ -1,0 +1,7 @@
+{
+  "version": "0.1.0",
+  "suite": "national-v1",
+  "scenarioCount": 15,
+  "verification": "Replay verifies actions and outcomes, not agent identity or generalization.",
+  "rows": []
+}

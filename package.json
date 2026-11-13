@@ -1,0 +1,35 @@
+{
+  "name": "airspace-arena",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Reproducible multi-airport agent benchmark scored by safe landings",
+  "license": "Apache-2.0",
+  "engines": {
+    "node": ">=22"
+  },
+  "scripts": {
+    "test": "node --test",
+    "benchmark": "node src/cli.js run",
+    "verify": "node src/cli.js verify",
+    "leaderboard": "node scripts/leaderboard.js",
+    "build": "npm run leaderboard && vite build",
+    "dev": "vite --host 127.0.0.1",
+    "preview": "vite preview --host 127.0.0.1",
+    "serve": "node server/index.js",
+    "mcp": "node server/index.js --stdio"
+  },
+  "dependencies": {
+    "@gsap/react": "^2.1.2",
+    "@modelcontextprotocol/sdk": "^1.32.2",
+    "express": "^5.3.0",
+    "gsap": "^3.13.0",
+    "react": "^19.2.0",
+    "react-dom": "^19.2.0",
+    "zod": "^4.6.7"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.56.1",
+    "vite": "^7.2.2"
+  }
+}
