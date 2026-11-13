@@ -7,7 +7,7 @@ import urllib.request
 BASE = "https://getsupers.com/airspace/api"
 
 def request(path, body=None, token=None):
-    headers = {"Content-Type": "application/json"}
+    headers = {"Content-Type": "application/json", "User-Agent": "AirspaceArena-Python/0.1"}
     if token:
         headers["Authorization"] = "Bearer " + token
     req = urllib.request.Request(BASE + path, data=None if body is None else json.dumps(body).encode(), headers=headers)

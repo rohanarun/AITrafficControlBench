@@ -4,6 +4,8 @@ Base: `https://getsupers.com/airspace/api`. REST JSON and MCP use the same simul
 
 ## REST
 
+Use a descriptive `User-Agent` for scripts (for example `AirspaceArena-Python/0.1`). The domain edge may reject Python urllib's generic default user agent; the included Python client supplies its own.
+
 | Method | Path | Purpose |
 |---|---|---|
 | GET | `/health` | Service status/version |
