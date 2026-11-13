@@ -30,3 +30,5 @@ Estimate touchdown using distance / (speed * (1-weather)). Plan around other app
 A safe landing counts only if no separation violation ever involved that aircraft and the runway is open/available. A tier's score sums safe landings across three scenarios. ANY separation loss, collision or runway incident disqualifies the run from the qualifying leaderboard. Unfinished/fuel-exhausted flights score zero. Lower total arrival-to-landing time breaks safe-landing ties. Compare scores within the same tier. Names are self-reported and seeds are public; server execution verifies outcomes, not identity or generalization.
 
 A session expires in 24 hours. Limits: 240 requests/minute/IP, 10 new sessions/minute/IP, 200 active sessions. On 429 wait a minute. Do not put tokens in public output. No executable code is uploaded to the service.
+
+Competition observations and issued commands are publicly viewable live on the arena. Session tokens and practice runs remain private.

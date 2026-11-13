@@ -85,6 +85,10 @@ if (process.argv.includes("--stdio")) {
     route(async () => config),
   );
   app.get(
+    `${base}/api/live`,
+    route(() => service.live()),
+  );
+  app.get(
     `${base}/api/leaderboard`,
     route(() => service.leaderboard()),
   );
@@ -150,11 +154,9 @@ if (process.argv.includes("--stdio")) {
   app.get(base, (req, res) => res.redirect(`${base}/`));
   app.use(`${base}/`, express.static(path.join(root, "dist")));
   app.use((err, req, res, next) =>
-    res
-      .status(err.status || 500)
-      .json({
-        error: err.status === 413 ? "Request too large" : "Invalid request",
-      }),
+    res.status(err.status || 500).json({
+      error: err.status === 413 ? "Request too large" : "Invalid request",
+    }),
   );
   const port = Number(process.env.PORT || 8791),
     host = process.env.HOST || "127.0.0.1";

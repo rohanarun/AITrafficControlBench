@@ -257,8 +257,44 @@ function App() {
     [boardError, setBoardError] = useState(""),
     [boardTier, setBoardTier] = useState(1),
     [copied, setCopied] = useState(false),
-    [note, setNote] = useState(0);
-  const sim = simRef.current,
+    [note, setNote] = useState(0),
+    [liveRun, setLiveRun] = useState(null),
+    [watchLive, setWatchLive] = useState(true),
+    [liveError, setLiveError] = useState("");
+  useEffect(() => {
+    let active = true;
+    const refresh = async () => {
+      try {
+        const response = await fetch(`${API}/live`);
+        if (!response.ok) throw Error("Live feed unavailable");
+        const data = await response.json();
+        if (active) {
+          setLiveRun(data.run);
+          setLiveError("");
+        }
+      } catch {
+        if (active) setLiveError("Live feed temporarily unavailable");
+      }
+    };
+    refresh();
+    const timer = setInterval(refresh, 3000);
+    return () => {
+      active = false;
+      clearInterval(timer);
+    };
+  }, []);
+  const liveSim =
+    watchLive && liveRun
+      ? new Simulation(config, { level: liveRun.level, seed: 0 })
+      : null;
+  if (liveSim) {
+    liveSim.time = liveRun.observation.time;
+    liveSim.flights = liveRun.observation.aircraft;
+    liveSim.airports = liveRun.observation.airports;
+    liveSim.summary = () => liveRun.observation.score;
+  }
+
+  const sim = liveSim || simRef.current,
     score = sim.summary();
   useGSAP(
     () => {
@@ -465,71 +501,32 @@ function App() {
           GitHub <Arrow />
         </a>
       </nav>
-      <section className="hero shell">
-        <div className="hero-copy">
-          <p className="eyebrow">THE OPEN AIR TRAFFIC CONTROL COMPETITION</p>
-          <h1 className="max-w-6xl">
-            Every landing
-            <br />
-            <em>counts.</em>
-          </h1>
-          <p className="lede">
-            One sky. More aircraft. Better agents.
-            <br />
-            Build the automation that brings them all home.
-          </p>
-          <div className="hero-actions">
-            <a className="button light" href="#connect">
-              Enter the arena <Arrow />
-            </a>
-            <a className="button outline" href="#simulation">
-              Explore the simulator <span aria-hidden="true">→</span>
-            </a>
-          </div>
-          <p className="hero-foot">
-            Open source. Agent agnostic. Scored by safe landings.
-          </p>
-        </div>
-        <div className="hero-map">
-          <div className="map-heading">
-            <span className="status-dot" /> NATIONAL AIRSPACE{" "}
-            <span>RESEARCH SIMULATION</span>
-          </div>
-          <AirportMap selected={airport} onSelect={setAirport} />
-          <div className="map-caption">
-            <span>Coordinate the whole picture.</span>
-            <span>12 US AIRPORTS</span>
-          </div>
-        </div>
-      </section>
-      <div className="airport-marquee" aria-label="Airports in the benchmark">
-        <div>
-          {[...config.airports, ...config.airports].map((a, i) => (
-            <span key={i}>
-              {a.id}
-              <small>{a.name}</small>
-              <b aria-hidden="true">·</b>
-            </span>
-          ))}
-        </div>
-      </div>
       <section id="simulation" className="shell chapter">
-        <div className="section-heading">
+        <div className="live-heading">
           <div>
-            <p className="eyebrow">THE CONTROL ROOM</p>
-            <h2>
-              Take the controls.
-              <br />
-              <span className="muted">Understand the challenge.</span>
-            </h2>
+            <h1>Airspace control room</h1>
+            <p>
+              {watchLive
+                ? liveError ||
+                  (liveRun
+                    ? `${liveRun.agentName} · Tier ${liveRun.level} · Scenario ${liveRun.scenarioIndex + 1}/${liveRun.scenarioCount} · ${liveRun.finished ? "Completed run" : Date.now() - liveRun.updatedAt < 30000 ? "Live agent" : "Waiting for agent"}`
+                    : "Waiting for a competition to start")
+                : "Local practice · unranked"}
+            </p>
           </div>
-          <p>
-            Try the sandbox. Then give your agent the same controls through MCP
-            or the API.
-          </p>
+          <button
+            onClick={() => {
+              setWatchLive(!watchLive);
+              setRunning(false);
+            }}
+          >
+            {watchLive ? "Try practice controls" : "Watch live agents"}
+          </button>
         </div>
         <div className="console">
-          <div className="console-toolbar">
+          <div
+            className={`console-toolbar ${watchLive ? "live-readonly" : ""}`}
+          >
             <div className="control">
               <label htmlFor="level">Difficulty</label>
               <select
@@ -572,6 +569,15 @@ function App() {
               </button>
             </div>
           </div>
+          {watchLive && (
+            <div className="live-strip">
+              <span className="status-dot" />{" "}
+              {liveRun?.finished
+                ? "LAST COMPLETED COMPETITION"
+                : "LIVE COMPETITION FEED"}
+              <span>Read-only · updates every 3 seconds</span>
+            </div>
+          )}
           <div className="console-body">
             <div className="radar">
               <div
@@ -630,6 +636,7 @@ function App() {
                         </span>
                       </div>
                       <select
+                        disabled={watchLive}
                         aria-label={`Speed for ${f.id}`}
                         value={f.speedKnots}
                         onChange={(e) =>
@@ -651,7 +658,7 @@ function App() {
                         ))}
                       </select>
                       <button
-                        disabled={f.status === "approach"}
+                        disabled={watchLive || f.status === "approach"}
                         onClick={() => step([{ id: f.id, clear: true }])}
                       >
                         {f.status === "holding"
@@ -673,17 +680,46 @@ function App() {
                 )}
               </div>
               <div className="console-note" role="status">
-                {message}
+                {watchLive
+                  ? liveError ||
+                    "Watching server-executed agent commands. Practice controls are separate."
+                  : message}
               </div>
               <div className="panel-footer">
-                <span>LOCAL PRACTICE · UNRANKED</span>
-                <button onClick={exportRun}>
+                <span>
+                  {watchLive
+                    ? "SERVER-EXECUTED COMPETITION"
+                    : "LOCAL PRACTICE · UNRANKED"}
+                </span>
+                <button disabled={watchLive} onClick={exportRun}>
                   Export trace <Arrow />
                 </button>
               </div>
             </div>
           </div>
         </div>
+        {watchLive && (
+          <div className="command-feed">
+            <h3>Agent commands</h3>
+            {liveRun?.commands?.length ? (
+              [...liveRun.commands].reverse().map((t) => (
+                <div key={t.time}>
+                  <time>{clock(t.time)}</time>
+                  <code>
+                    {t.actions
+                      .map(
+                        (a) =>
+                          `${a.id}: ${a.clear ? "clear approach" : "set speed"}${a.speedKnots ? ` · ${a.speedKnots} kt` : ""}`,
+                      )
+                      .join(" / ")}
+                  </code>
+                </div>
+              ))
+            ) : (
+              <p>No commands issued yet.</p>
+            )}
+          </div>
+        )}
         <div className="bento grid-flow-dense">
           <div className="bento-card wide">
             <span className="line-symbol" aria-hidden="true">
@@ -969,26 +1005,6 @@ function App() {
             </div>
           </div>
         </div>
-      </section>
-      <section className="final-cta shell chapter">
-        <div className="scale-media runway-image">
-          <img
-            src="https://picsum.photos/seed/airspace-night/1920/1080"
-            alt="Abstract landscape backdrop"
-          />
-        </div>
-        <p className="eyebrow">THE NEXT BEST CONTROLLER COULD BE YOURS</p>
-        <h2>
-          Clear for
-          <br />
-          <em>something better.</em>
-        </h2>
-        <a href="#connect" className="button light">
-          Enter the competition <Arrow />
-        </a>
-        <a href={REPO} className="text-link" target="_blank" rel="noreferrer">
-          Contribute on GitHub <Arrow />
-        </a>
       </section>
       <footer className="shell">
         <a className="brand" href="#">

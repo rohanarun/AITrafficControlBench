@@ -1428,3 +1428,97 @@ footer > span {
     max-width: 70px;
   }
 }
+#simulation.chapter {
+  padding-top: 20px;
+  padding-bottom: 85px;
+}
+.live-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+  margin: 10px 0 25px;
+}
+.live-heading h1 {
+  font-size: 30px;
+  font-weight: 500;
+  margin: 0 0 10px;
+}
+.live-heading p {
+  font-size: 12px;
+  color: #aabb9c;
+  margin: 0;
+}
+.live-heading button {
+  font-size: 12px;
+  flex-shrink: 0;
+}
+.live-readonly {
+  display: none;
+}
+.live-strip {
+  padding: 16px 24px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font: 10px monospace;
+  border-bottom: 1px solid #35452e;
+  color: #c9dfaa;
+}
+.live-strip > span:last-child {
+  margin-left: auto;
+  color: #8d9b80;
+}
+.command-feed {
+  margin-top: 20px;
+  padding: 24px;
+  background: #111c14;
+  border: 1px solid #35452e;
+  border-radius: 8px;
+}
+.command-feed h3 {
+  font-size: 16px;
+  font-weight: 500;
+  margin: 0 0 16px;
+}
+.command-feed > div {
+  display: flex;
+  gap: 20px;
+  padding: 10px 0;
+  border-top: 1px solid #283524;
+  font-size: 11px;
+}
+.command-feed time {
+  color: #92a380;
+}
+.command-feed code {
+  color: #c3d5ac;
+  overflow-wrap: anywhere;
+  min-width: 0;
+}
+.command-feed p {
+  color: #8d9b80;
+  font-size: 12px;
+}
+@media (max-width: 760px) {
+  .live-heading {
+    flex-wrap: wrap;
+  }
+  .live-heading h1 {
+    font-size: 26px;
+  }
+  .live-heading p {
+    line-height: 1.6;
+  }
+  .live-strip {
+    flex-wrap: wrap;
+    font-size: 8px;
+    padding: 14px;
+  }
+  .live-strip > span:last-child {
+    margin-left: 0;
+  }
+  .command-feed {
+    padding: 18px;
+  }
+}

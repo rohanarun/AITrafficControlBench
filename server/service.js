@@ -184,6 +184,7 @@ export class ArenaService {
       for (let i = 1; i < steps && !sim.done; i++) sim.step([]);
       r.state = this.snapshot(sim);
       r.revision++;
+      r.updatedAt = Date.now();
       await this.save("sessions", r.id, r);
       return this.view(r);
     });
@@ -203,6 +204,7 @@ export class ArenaService {
         trace: s.actions,
       });
       r.revision++;
+      r.updatedAt = Date.now();
       if (r.index + 1 < r.seeds.length) {
         r.index++;
         r.state = this.snapshot(
@@ -234,6 +236,52 @@ export class ArenaService {
       }
       await this.save("sessions", r.id, r);
       return this.view(r);
+    });
+  }
+  async live() {
+    if (this.liveCache && Date.now() - this.liveCache.at < 2000)
+      return this.liveCache.value;
+    return this.serial(async () => {
+      const runs = [];
+      for (const file of (
+        await readdir(path.join(this.directory, "sessions"))
+      ).filter((f) => f.endsWith(".json"))) {
+        const r = JSON.parse(
+          await readFile(path.join(this.directory, "sessions", file), "utf8"),
+        );
+        if (r.practice || r.expiresAt < Date.now()) continue;
+        runs.push(r);
+      }
+      runs.sort(
+        (a, b) =>
+          Number(
+            !b.finished && Date.now() - (b.updatedAt || b.createdAt) < 30000,
+          ) -
+            Number(
+              !a.finished && Date.now() - (a.updatedAt || a.createdAt) < 30000,
+            ) || (b.updatedAt || b.createdAt) - (a.updatedAt || a.createdAt),
+      );
+      const r = runs[0];
+      const value = {
+        run: r
+          ? {
+              sessionId: r.id,
+              agentName: r.agentName,
+              level: r.level,
+              scenarioIndex: r.index,
+              scenarioCount: r.seeds.length,
+              revision: r.revision,
+              updatedAt: r.updatedAt || r.createdAt,
+              finished: r.finished,
+              observation: this.restore(r).observation(),
+              commands: r.state.actions
+                .filter((t) => t.actions.length)
+                .slice(-8),
+            }
+          : null,
+      };
+      this.liveCache = { at: Date.now(), value };
+      return value;
     });
   }
   async leaderboard() {

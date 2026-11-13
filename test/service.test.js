@@ -91,3 +91,19 @@ test("invalid command cannot mutate session or revision", async (t) => {
   );
   assert.equal((await s.observe(auth)).revision, 0);
 });
+test("public live feed excludes credentials, future arrivals and practice sessions", async (t) => {
+  const { s } = await setup(t, { short: false });
+  await s.start({ agentName: "private-practice", practice: true });
+  assert.equal((await s.live()).run, null);
+  const r = await s.start({ agentName: "public-competition" });
+  s.liveCache = null;
+  const feed = await s.live();
+  assert.equal(feed.run.agentName, "public-competition");
+  assert.equal(JSON.stringify(feed).includes(r.sessionToken), false);
+  assert.equal("sessionToken" in feed.run, false);
+  assert.ok(
+    feed.run.observation.aircraft.every(
+      (f) => f.spawn <= feed.run.observation.time,
+    ),
+  );
+});

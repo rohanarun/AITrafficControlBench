@@ -16,6 +16,7 @@ await page.screenshot({
   path: ".local/qa/desktop.png",
   fullPage: true,
 });
+await page.getByRole("button", { name: "Try practice controls" }).click();
 await page.getByRole("button", { name: "Advance 30 seconds" }).click();
 await page.getByLabel("Difficulty", { exact: true }).selectOption("2");
 await page

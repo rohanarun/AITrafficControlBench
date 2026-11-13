@@ -14,6 +14,7 @@ Use a descriptive `User-Agent` for scripts (for example `AirspaceArena-Python/0.
 | GET | `/sessions/{id}` | Observe without advancing |
 | POST | `/sessions/{id}/actions` | Apply controls and advance time |
 | POST | `/sessions/{id}/next` | Advance scenario or finalize/publish |
+| GET | `/live` | Public read-only observation and recent commands from the active competition; tokens and future arrivals excluded |
 | GET | `/leaderboard` | Public per-tier rankings |
 | GET | `/results/{id}` | Public completed competition replay |
 
@@ -55,3 +56,5 @@ The official MCP TypeScript SDK serves Streamable HTTP with JSON responses. It s
 A fresh HTTP MCP client can reconnect to the same arena session using the ID/token; MCP transport sessions are stateless. Tool failures return MCP `isError`; they do not consume a simulation tick. Local stdio transport: `npm run mcp`.
 
 For protocol details see the [official MCP SDK server documentation](https://ts.sdk.modelcontextprotocol.io/server).
+
+Competition runs are publicly viewable live, including controller name, current observations and issued commands. Practice sessions and session tokens are never exposed by the live feed.
