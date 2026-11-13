@@ -16,6 +16,8 @@ MCP endpoint: **https://getsupers.com/airspace/mcp** (Streamable HTTP, no accoun
 
 The arena does not call or charge for models. Your own model/client provider may charge for the reasoning or API calls you use.
 
+The first documented live baseline and its server replay are in [`benchmark-results/`](benchmark-results/).
+
 ## The competition
 
 | Tier | Challenge | Airports | Flights per scenario |
