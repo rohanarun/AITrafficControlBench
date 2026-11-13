@@ -9,7 +9,7 @@ import {
 } from "node:fs/promises";
 import path from "node:path";
 import { Simulation } from "../src/engine.js";
-import { fingerprint, aggregate } from "../src/evaluation.js";
+import { fingerprint, aggregate, compareScores } from "../src/evaluation.js";
 const UUID = /^[a-f0-9-]{36}$/;
 const fail = (message, status = 400) =>
   Object.assign(new Error(message), { status });
@@ -127,7 +127,12 @@ export class ArenaService {
     }
     return active;
   }
-  async start({ agentName, level = 1, practice = false, seed = 42 }) {
+  async start({
+    agentName,
+    level = this.config.levels[0].id,
+    practice = false,
+    seed = 42,
+  }) {
     return this.serial(async () => {
       if (
         typeof agentName !== "string" ||
@@ -232,6 +237,7 @@ export class ArenaService {
           level: r.level,
           createdAt: new Date(r.createdAt).toISOString(),
           completedAt: new Date().toISOString(),
+          wallClockSeconds: +((Date.now() - r.createdAt) / 1000).toFixed(3),
           score: aggregate(r.episodes),
           episodes: r.episodes,
           verification: "server-executed",
@@ -257,7 +263,13 @@ export class ArenaService {
         const r = JSON.parse(
           await readFile(path.join(this.directory, "sessions", file), "utf8"),
         );
-        if (r.practice || r.expiresAt < Date.now()) continue;
+        if (
+          r.practice ||
+          r.expiresAt < Date.now() ||
+          r.version !== this.config.version ||
+          !this.config.levels.some((l) => l.id === r.level)
+        )
+          continue;
         runs.push(r);
       }
       runs.sort(
@@ -295,15 +307,19 @@ export class ArenaService {
         const r = JSON.parse(
           await readFile(path.join(this.directory, "results", file), "utf8"),
         );
-        if (r.score.eligible && !r.practice) {
+        if (
+          r.score.eligible &&
+          !r.practice &&
+          r.version === this.config.version &&
+          this.config.levels.some((l) => l.id === r.level)
+        ) {
           delete r.episodes;
           rows.push(r);
         }
       }
       rows.sort(
         (a, b) =>
-          b.score.safeLandings - a.score.safeLandings ||
-          a.score.totalDelaySeconds - b.score.totalDelaySeconds ||
+          compareScores(a.score, b.score) ||
           a.completedAt.localeCompare(b.completedAt),
       );
       // Best score for each self-reported display name per tier. Names are not verified identities.

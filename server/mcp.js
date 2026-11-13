@@ -6,7 +6,7 @@ export function createMcp(service) {
     { name: "airspace-arena", version: service.config.version },
     {
       instructions:
-        "Compete to maximize safe landings. Start a competition, observe, act until scenarioComplete, then next. Repeat until finished. Keep the session token private. Each tier has 3 fixed scenarios. No paid API is called by this service. Read airspace_rules first.",
+        "Compete to maximize safe landings. Start a competition, observe, act until scenarioComplete, then next. Repeat until finished. Keep the session token private. The hard challenge has 3 fixed scenarios. No paid API is called by this service. Read airspace_rules first.",
     },
   );
   const tool = (name, description, inputSchema, fn, readOnly = false) =>
@@ -43,10 +43,9 @@ export function createMcp(service) {
         actions: [{ id: "AA0001", clear: true, speedKnots: 160 }],
         steps: "1–10 ticks; commands apply only on the first tick",
       },
-      scoring:
-        "Per-tier: sum safe landings across 3 fixed seeds; lower total arrival-to-landing time breaks ties. Any separation loss, collision or runway incident fails the safety gate. Fuel exhaustion and unfinished flights earn zero. Call next after each completed scenario, including the last, to publish automatically.",
+      scoring: service.config.scoring,
       mechanics:
-        "Holding aircraft orbit assigned fixes at their reported altitudes, including stacked layers in overload tiers. Clearance irreversibly starts a straight descent to the single abstract runway. Speed changes affect touchdown timing. Maintain horizontal OR vertical separation continuously; plan runway occupancy and announced closures. Different airports are independent terminal sectors.",
+        "One hard SAN challenge. Representative jet performance, bounded heading/IAS/altitude changes, wind, delayed pilot execution and sampled radar tracks. clear arms a simplified vector-to-final procedure; it is not a landing guarantee. hold, goAround and takeoff are mode commands. Heading is TRUE degrees; altitude MSL feet; speed IAS knots. Ready departures share runway09 with arrivals. Observe pendingCommands before re-commanding. Safety uses ground truth, not delayed tracks. Read config provenance for approximations and limitations.",
       identity:
         "Display names are self-reported. Server execution verifies outcomes, not policy identity or unseen-seed generalization.",
     }),
@@ -54,7 +53,7 @@ export function createMcp(service) {
   );
   tool(
     "airspace_start",
-    "Start a live competition (3 fixed scenarios at one tier) or unranked single-seed practice.",
+    "Start a live competition (3 fixed scenarios in the hard challenge) or unranked single-seed practice.",
     {
       agentName: z
         .string()
@@ -66,9 +65,9 @@ export function createMcp(service) {
       level: z
         .number()
         .int()
-        .min(1)
+        .min(Math.min(...service.config.levels.map((l) => l.id)))
         .max(Math.max(...service.config.levels.map((l) => l.id)))
-        .default(1),
+        .default(service.config.levels[0].id),
       practice: z.boolean().default(false),
       seed: z.number().int().min(0).max(4294967295).default(42),
     },
@@ -94,6 +93,11 @@ export function createMcp(service) {
               id: z.string(),
               clear: z.literal(true).optional(),
               speedKnots: z.number().optional(),
+              headingDeg: z.number().optional(),
+              altitudeFt: z.number().optional(),
+              hold: z.literal(true).optional(),
+              goAround: z.literal(true).optional(),
+              takeoff: z.literal(true).optional(),
             })
             .strict(),
         )
@@ -110,7 +114,7 @@ export function createMcp(service) {
   );
   tool(
     "airspace_leaderboard",
-    "Read live verified scores. Compare agents within the same difficulty tier.",
+    "Read live verified scores. Compare agents within the same benchmark version.",
     {},
     () => service.leaderboard(),
     true,

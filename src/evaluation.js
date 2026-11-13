@@ -19,6 +19,45 @@ export function aggregate(episodes) {
   const out = Object.fromEntries(
     keys.map((k) => [k, episodes.reduce((n, e) => n + e.score[k], 0)]),
   );
+  if (episodes.every((e) => Number.isFinite(e.score.unservedTimeSeconds))) {
+    for (const k of [
+      "scheduledArrivals",
+      "scheduledDepartures",
+      "safeDepartures",
+      "totalDepartures",
+      "escaped",
+      "unservedTimeSeconds",
+      "fuelUsedKg",
+      "distanceFlownNm",
+      "airborneSeconds",
+      "holdingSeconds",
+      "goArounds",
+      "violationAircraftSeconds",
+      "completedFlightSeconds",
+      "simulatedSeconds",
+    ])
+      out[k] = +episodes.reduce((n, e) => n + e.score[k], 0).toFixed(3);
+    out.timeToCompleteSeconds = episodes.every(
+      (e) => e.score.timeToCompleteSeconds !== null,
+    )
+      ? episodes.reduce((n, e) => n + e.score.timeToCompleteSeconds, 0)
+      : null;
+    out.safeCompletionPercent = +(
+      (100 * (out.safeLandings + out.safeDepartures)) /
+      out.scheduled
+    ).toFixed(2);
+    out.safeLandingsPerHour = +(
+      (out.safeLandings * 3600) /
+      out.simulatedSeconds
+    ).toFixed(2);
+    out.meanCompletedFlightSeconds =
+      out.safeLandings + out.safeDepartures
+        ? +(
+            out.completedFlightSeconds /
+            (out.safeLandings + out.safeDepartures)
+          ).toFixed(2)
+        : null;
+  }
   out.eligible = episodes.every((e) => e.score.eligible);
   return out;
 }
@@ -80,3 +119,5 @@ export function verifyRun(config, run, { official = false } = {}) {
   if (official && !score.eligible) throw new Error("Safety gate failed");
   return score;
 }
+
+export { compareScores } from "./ranking.js";

@@ -1,3 +1,4 @@
+// Legacy forecast policy: not a terminal-v1 controller. Follow public/agent.md for the new challenge.
 import { Client } from "@modelcontextprotocol/sdk/client/index.js";
 import { StreamableHTTPClientTransport } from "@modelcontextprotocol/sdk/client/streamableHttp.js";
 import { Simulation } from "../src/engine.js";
@@ -25,8 +26,12 @@ console.log(
       "Observation-only trajectory forecasting; no future arrival manifest",
   }),
 );
+if (rules.config.engine === "terminal-v1") {
+  await client.close();
+  throw Error("This historical policy only supports v0.1/v0.2. Read public/agent.md and prompts/controller.md for the new challenge.");
+}
 const results = [];
-for (const level of [Number(process.argv[2] || 1)]) {
+for (const level of [Number(process.argv[2] || rules.config.levels[0].id)]) {
   const agentName = `Forecast / script / no runtime model / ${Date.now()} L${level}`;
   let run = await call("airspace_start", { agentName, level });
   const auth = { sessionId: run.sessionId, sessionToken: run.sessionToken };

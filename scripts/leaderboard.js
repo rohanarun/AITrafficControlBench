@@ -1,6 +1,6 @@
 import { configFor } from "../src/config.js";
 import { readFile, readdir, writeFile, mkdir } from "node:fs/promises";
-import { verifyRun, digest } from "../src/evaluation.js";
+import { verifyRun, digest, compareScores } from "../src/evaluation.js";
 const config = JSON.parse(
   await readFile(new URL("../config/benchmark.json", import.meta.url), "utf8"),
 );
@@ -30,8 +30,7 @@ for (const file of (await readdir(root))
 }
 rows.sort(
   (a, b) =>
-    b.score.safeLandings - a.score.safeLandings ||
-    a.score.totalDelaySeconds - b.score.totalDelaySeconds ||
+    compareScores(a.score,b.score) ||
     a.agent.localeCompare(b.agent),
 );
 await mkdir(new URL("../public/data/", import.meta.url), { recursive: true });

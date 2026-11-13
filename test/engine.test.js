@@ -1,10 +1,14 @@
+import { currentConfig } from "../src/config.js";
 import test from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { Simulation, sweptConflict } from "../src/engine.js";
 import { verifyRun, fingerprint, aggregate } from "../src/evaluation.js";
 const config = JSON.parse(
-  readFileSync(new URL("../config/benchmark.json", import.meta.url), "utf8"),
+  readFileSync(
+    new URL("../config/releases/0.1.0.json", import.meta.url),
+    "utf8",
+  ),
 );
 const one = () => {
   const c = structuredClone(config);
@@ -161,25 +165,25 @@ test("unsafe simultaneous clearances cause real collisions on a canonical scenar
   const s = new Simulation(config, { level: 1, seed: 42 });
   while (s.time < 1500) s.step([]);
   s.step(
-    s
-      .observation()
-      .aircraft.map((f) => ({
-        id: f.id,
-        clear: true,
-        speedKnots: s.rules.maxSpeedKnots,
-      })),
+    s.observation().aircraft.map((f) => ({
+      id: f.id,
+      clear: true,
+      speedKnots: s.rules.maxSpeedKnots,
+    })),
   );
   finish(s);
   assert.ok(s.summary().collisions > 0);
   assert.equal(s.summary().safeLandings, 0);
   assert.equal(s.summary().eligible, false);
 });
-test("overload tiers apply effective rules and bounded layered holding fixes", () => {
-  const s = new Simulation(config, { level: 8, seed: 42 });
-  assert.equal(s.flights.length, 960);
-  assert.equal(s.rules.fuelSeconds, 1500);
-  assert.equal(s.rules.arrivalWindowSeconds, 450);
-  assert.ok(s.flights.every((f) => Math.hypot(f.fixX, f.fixY) <= 40.001));
-  assert.ok(s.flights.some((f) => f.altitudeFt > 12000));
-  assert.equal(s.observation().rules.runwayOccupancySeconds, 120);
+test("only one hard terminal challenge is available", () => {
+  assert.deepEqual(
+    currentConfig.levels.map((l) => l.id),
+    [6],
+  );
+  assert.throws(() => new Simulation(currentConfig, { level: 1 }));
+  const s = new Simulation(currentConfig);
+  assert.equal(s.flights.length, 84);
+  assert.equal(s.airports[0].icao, "KSAN");
+  assert.equal(s.observation().aircraft.length, 15);
 });

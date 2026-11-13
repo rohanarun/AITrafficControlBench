@@ -14,7 +14,7 @@ const args = process.argv.slice(2),
   command = args.shift();
 const opt = (key, fallback) =>
   args.includes(key) ? args[args.indexOf(key) + 1] : fallback;
-const help = `Airspace Arena\n  node src/cli.js run --agent agents/idle.js --name idle --out .local/idle.json\n  node src/cli.js run --agent agents/model.js --name my-model --suite --out .local/run.json\n  node src/cli.js run --command '["python3","my_agent.py"]' --level 1 --seed 42 --out .local/run.json\n  node src/cli.js verify --file .local/run.json [--official]\nSingle episodes are practice. --suite runs all 15 fixed scenarios. Model agents may incur provider charges.\nAgents are local subprocesses, not sandboxed; run only trusted code locally.`;
+const help = `Airspace Arena\n  node src/cli.js run --agent agents/idle.js --name idle --out .local/idle.json\n  node src/cli.js run --agent agents/model.js --name my-model --suite --out .local/run.json\n  node src/cli.js run --command '["python3","my_agent.py"]' --level 6 --seed 42 --out .local/run.json\n  node src/cli.js verify --file .local/run.json [--official]\nSingle episodes are practice. --suite runs all 3 fixed scenarios. Model agents may incur provider charges.\nAgents are local subprocesses, not sandboxed; run only trusted code locally.`;
 class Agent {
   constructor(argv) {
     this.child = spawn(argv[0], argv.slice(1), {
@@ -124,7 +124,7 @@ try {
     const suite = args.includes("--suite"),
       levels = suite
         ? config.levels.map((l) => l.id)
-        : [Number(opt("--level", "1"))],
+        : [Number(opt("--level", String(config.levels[0].id)))],
       seeds = suite ? config.seeds : [Number(opt("--seed", "42"))];
     const run = {
       schema: 1,

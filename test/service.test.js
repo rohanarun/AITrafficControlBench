@@ -4,7 +4,10 @@ import assert from "node:assert/strict";
 import { mkdtemp, rm, readFile, mkdir } from "node:fs/promises";
 import { ArenaService } from "../server/service.js";
 const config = JSON.parse(
-  await readFile(new URL("../config/benchmark.json", import.meta.url), "utf8"),
+  await readFile(
+    new URL("../config/releases/0.1.0.json", import.meta.url),
+    "utf8",
+  ),
 );
 async function setup(t, { short = true } = {}) {
   const c = structuredClone(config);

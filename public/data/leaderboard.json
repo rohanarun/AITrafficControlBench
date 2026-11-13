@@ -1,7 +1,7 @@
 {
-  "version": "0.2.0",
-  "suite": "national-v2",
-  "scenarioCount": 24,
+  "version": "0.3.0",
+  "suite": "san-terminal-challenge-v1",
+  "scenarioCount": 3,
   "verification": "Replay verifies actions and outcomes, not agent identity or generalization.",
   "rows": []
 }

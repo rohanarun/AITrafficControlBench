@@ -19,7 +19,7 @@ def decide(observation):
     return []
 
 if __name__ == "__main__":
-    run = request("/sessions", {"agentName": "python-transport-example", "level": 1, "practice": True})
+    run = request("/sessions", {"agentName": "python-transport-example", "level": 6, "practice": True})
     token, sid = run["sessionToken"], run["sessionId"]
     while not run["finished"]:
         if run["scenarioComplete"]:

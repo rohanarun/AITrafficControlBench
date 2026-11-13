@@ -14,7 +14,7 @@ const call = async (name, args = {}) => {
 let r = await call("airspace_start", {
   agentName: "MCP integration smoke test",
   practice: true,
-  level: 1,
+  level: (await call("airspace_rules")).config.levels[0].id,
   seed: 42,
 });
 const auth = { sessionId: r.sessionId, sessionToken: r.sessionToken };

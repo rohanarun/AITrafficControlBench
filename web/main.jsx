@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { createRoot } from "react-dom/client";
+import { compareScores } from "../src/ranking.js";
 import { Simulation } from "../src/engine.js";
 import config from "../config/benchmark.json";
 import "./style.css";
@@ -9,12 +10,12 @@ const API =
   new URL("api", new URL(import.meta.env.BASE_URL, window.location.origin))
     .href;
 const MCP = "https://getsupers.com/airspace/mcp";
-const PROMPT = `Read https://getsupers.com/airspace/agent.md for the complete protocol. Compete in Airspace Arena and build the best air-traffic control automation you can. Connect to the public MCP server at ${MCP}. Read airspace_rules, then start a level 1 competition with airspace_start using a unique agentName. Choose a unique leaderboard name that includes the model you are using, in the format "Controller name / exact model ID". Use the model identity exposed by your client or provider; do not guess. If it is unavailable, say "model unknown". For a script-only controller, say "script / no runtime model"; you may separately name the model that built it, if known. Keep the full name within 80 characters. Keep the returned sessionToken private. Use airspace_observe and airspace_act to maximize SAFE landings. Coordinate approach timing across airports, maintain separation, respect runway occupancy and closures, and prioritize low-fuel aircraft. Every action needs the latest revision. An empty actions array advances time; steps can be 1–10. When scenarioComplete is true, call airspace_next. Repeat all 3 scenarios until finished so the server publishes the result. Inspect the leaderboard, analyze failures, improve your controller prompt or script, then try higher tiers, including the overload challenges at levels 6–8. Read the effective per-tier rules; planes can collide and crash if commands are unsafe. Never claim a score that the server did not return. If MCP is unavailable, use the equivalent REST API documented at ${API.replace("/api", "/")}, with GET /rules, POST /sessions, GET /sessions/{id}, POST /sessions/{id}/actions, POST /sessions/{id}/next and GET /leaderboard. Send Authorization: Bearer <sessionToken> for session requests. Start body: {"agentName":"your-controller / your-model-id","level":1}. The service is free to access; any model-provider costs are yours.`;
+const PROMPT = `Read https://getsupers.com/airspace/agent.md for the complete protocol. Compete in Airspace Arena and build the best air-traffic control automation you can. Connect to the public MCP server at ${MCP}. Read airspace_rules, then start the single hard San Diego challenge at level 6 with airspace_start using a unique agentName. Choose a unique leaderboard name that includes the model you are using, in the format "Controller name / exact model ID". Use the model identity exposed by your client or provider; do not guess. If it is unavailable, say "model unknown". For a script-only controller, say "script / no runtime model"; you may separately name the model that built it, if known. Keep the full name within 80 characters. Keep the returned sessionToken private. Use airspace_observe and airspace_act to maximize SAFE landings. Coordinate arrivals and departures on SAN runway09. Use headingDeg, altitudeFt, speedKnots, clear, hold, goAround and takeoff as documented. Allow for delayed pilot execution, sampled radar tracks, wind and heavy-aircraft wake spacing. Maximize safe completion, then reduce completion time and waiting. Never treat unfinished runs as fast completions. Every action needs the latest revision. An empty actions array advances time; steps can be 1–10. When scenarioComplete is true, call airspace_next. Repeat all 3 scenarios until finished so the server publishes the result. Inspect the leaderboard, analyze failures, improve your controller prompt or script, then retry the challenge with an improved controller. Read the effective per-tier rules; planes can collide and crash if commands are unsafe. Never claim a score that the server did not return. If MCP is unavailable, use the equivalent REST API documented at ${API.replace("/api", "/")}, with GET /rules, POST /sessions, GET /sessions/{id}, POST /sessions/{id}/actions, POST /sessions/{id}/next and GET /leaderboard. Send Authorization: Bearer <sessionToken> for session requests. Start body: {"agentName":"your-controller / your-model-id","level":6}. The service is free to access; any model-provider costs are yours.`;
 const clock = (t) =>
   `${String(Math.floor(t / 60)).padStart(2, "0")}:${String(t % 60).padStart(2, "0")}`;
 function Terminal({ sim, airport }) {
   const flights = sim.flights.filter(
-    (f) => f.airport === airport && ["holding", "approach"].includes(f.status),
+    (f) => f.airport === airport && !["ready", "scheduled"].includes(f.status),
   );
   const range = Math.max(40, ...flights.map((f) => Math.hypot(f.x, f.y) + 5)),
     scale = 185 / range;
@@ -62,14 +63,32 @@ function Terminal({ sim, airport }) {
         strokeWidth=".5"
         strokeDasharray="3 5"
       />
-      <rect
-        x="226"
-        y="220"
-        width="8"
-        height="20"
-        rx="1"
-        fill={sim.airport(airport)?.closed ? "#e78165" : "#d9eab4"}
-      />
+      {sim.airport(airport)?.runway &&
+        (() => {
+          const rw = sim.airport(airport).runway,
+            h = (rw.headingDeg * Math.PI) / 180;
+          return (
+            <g>
+              <line
+                x1="230"
+                y1="230"
+                x2={230 + Math.sin(h) * rw.lengthNm * scale}
+                y2={230 - Math.cos(h) * rw.lengthNm * scale}
+                stroke={sim.airport(airport).closed ? "#e78165" : "#d9eab4"}
+                strokeWidth="4"
+              />
+              <line
+                x1={230 + rw.thresholdX * scale}
+                y1={230 - rw.thresholdY * scale}
+                x2={230 + (rw.thresholdX - 12 * Math.sin(h)) * scale}
+                y2={230 - (rw.thresholdY - 12 * Math.cos(h)) * scale}
+                stroke="#d9eab4"
+                strokeDasharray="3 4"
+                opacity=".6"
+              />
+            </g>
+          );
+        })()}
       <text x="244" y="235" fontSize="11" fill="#d9eab4">
         {airport}
       </text>
@@ -91,6 +110,7 @@ function Terminal({ sim, airport }) {
             )}
             <path
               d={`M${x} ${y - 5}l4 9-4-2-4 2z`}
+              transform={`rotate(${f.headingDeg || 0}, ${x}, ${y})`}
               fill={
                 f.unsafe
                   ? "#f79176"
@@ -103,7 +123,7 @@ function Terminal({ sim, airport }) {
               {f.id}
             </text>
             <text x={x + 7} y={y + 5} fontSize="7" fill="#92a58c">
-              {Math.round(f.altitudeFt / 100)} / {f.speedKnots}
+              {Math.round(f.altitudeFt / 100)} / {Math.round(f.speedKnots)}
             </text>
           </g>
         );
@@ -115,7 +135,7 @@ function Terminal({ sim, airport }) {
         {clock(sim.time)} SIM
       </text>
       <text x="18" y="445" fill="#788d70" fontSize="8">
-        * SIMULATION ELAPSED TIME · SYNTHETIC AIRSPACE
+        * SIMULATION · DELAYED RADAR TRACKS · APPROXIMATE PROCEDURES
       </text>
     </svg>
   );
@@ -218,7 +238,7 @@ function App() {
               >
                 {runs.map((r) => (
                   <option key={r.sessionId} value={r.sessionId}>
-                    {r.agentName} · Tier {r.level}
+                    {r.agentName} · SAN challenge
                   </option>
                 ))}
               </select>
@@ -245,6 +265,28 @@ function App() {
                     run.observation.score.collisions}
                 </b>{" "}
                 safety incidents
+              </span>
+              <span>
+                <b>{run.observation.score.safeDepartures || 0}</b> safe
+                departures
+              </span>
+              <span>
+                <b>{clock(run.observation.time)}</b> simulated
+              </span>
+              <span>
+                <b>
+                  {clock(
+                    Math.round(
+                      (run.observation.score.completedFlightSeconds || 0) /
+                        Math.max(
+                          1,
+                          run.observation.score.safeLandings +
+                            (run.observation.score.safeDepartures || 0),
+                        ),
+                    ),
+                  )}
+                </b>{" "}
+                avg completed flight
               </span>
               <span>
                 {run.scenarioIndex + 1}/{run.scenarioCount} scenarios
@@ -287,9 +329,15 @@ function App() {
             <div className="commands" aria-label="Recent agent commands">
               {run.observation.recentEvents
                 .filter((e) =>
-                  ["collision", "runway-incident", "separation-loss"].includes(
-                    e.type,
-                  ),
+                  [
+                    "collision",
+                    "runway-incident",
+                    "unsafe-takeoff",
+                    "wake-separation-loss",
+                    "separation-loss",
+                    "unstable-or-blocked-go-around",
+                    "failed-approach-capture",
+                  ].includes(e.type),
                 )
                 .map((e, i) => (
                   <div className="incident" key={`incident-${i}`}>
@@ -310,7 +358,10 @@ function App() {
                         {t.actions
                           .map(
                             (a) =>
-                              `${a.id} ${a.clear ? "clear approach" : "speed"}${a.speedKnots ? ` ${a.speedKnots} kt` : ""}`,
+                              `${a.id} ${Object.entries(a)
+                                .filter(([k]) => k !== "id")
+                                .map(([k, v]) => `${k}=${v}`)
+                                .join(" ")}`,
                           )
                           .join(" · ")}
                       </code>
@@ -333,7 +384,8 @@ function App() {
       </section>
       <section className="leaderboard" aria-label="Leaderboard">
         <div className="board-label">
-          Leaderboard <span>ranked within each tier · server verified</span>
+          Leaderboard{" "}
+          <span>safety first · completion then time · server verified</span>
         </div>
         {boardError ? (
           <p>{boardError}</p>
@@ -342,9 +394,15 @@ function App() {
             <table>
               <thead>
                 <tr>
-                  <th>Controller</th>
-                  <th>Tier / version</th>
+                  <th>Rank</th>
+                  <th>Controller / model</th>
+                  <th>Version</th>
                   <th>Safe landings</th>
+                  <th>Safe departures</th>
+                  <th>Completion</th>
+                  <th>Sim completion</th>
+                  <th>Avg flight time</th>
+                  <th>Wall time</th>
                   <th>Safety incidents</th>
                   <th>Run</th>
                 </tr>
@@ -355,19 +413,40 @@ function App() {
                     (a, b) =>
                       a.version.localeCompare(b.version) ||
                       a.level - b.level ||
-                      b.score.safeLandings - a.score.safeLandings ||
-                      a.score.totalDelaySeconds - b.score.totalDelaySeconds,
+                      compareScores(a.score, b.score),
                   )
-                  .map((row) => (
+                  .map((row, index) => (
                     <tr key={row.id}>
+                      <td>{index + 1}</td>
                       <td title={row.agent}>{row.agent}</td>
-                      <td>
-                        {row.level} / {row.version}
-                      </td>
+                      <td>{row.version}</td>
                       <td>
                         <strong>
-                          {row.score.safeLandings}/{row.score.scheduled}
+                          {row.score.safeLandings}/
+                          {row.score.scheduledArrivals ?? row.score.scheduled}
                         </strong>
+                      </td>
+                      <td>
+                        {row.score.safeDepartures ?? 0}/
+                        {row.score.scheduledDepartures ?? 0}
+                      </td>
+                      <td>{row.score.safeCompletionPercent ?? 0}%</td>
+                      <td title="Time until every flight completes safely, summed across scenarios">
+                        {row.score.timeToCompleteSeconds == null
+                          ? "Incomplete"
+                          : clock(row.score.timeToCompleteSeconds)}
+                      </td>
+                      <td title="Average arrival-to-completion time for safely completed flights">
+                        {row.score.meanCompletedFlightSeconds == null
+                          ? "—"
+                          : clock(
+                              Math.round(row.score.meanCompletedFlightSeconds),
+                            )}
+                      </td>
+                      <td title="Includes computation, network and idle time; not a ranking tiebreaker">
+                        {row.wallClockSeconds == null
+                          ? "—"
+                          : clock(Math.round(row.wallClockSeconds))}
                       </td>
                       <td>
                         {row.score.separationLosses +
