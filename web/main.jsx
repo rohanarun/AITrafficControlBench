@@ -112,7 +112,7 @@ function Terminal({ sim, airport }) {
         {airport} TERMINAL
       </text>
       <text x="350" y="25" fill="#b4cc92" fontSize="9">
-        {clock(sim.time)} UTC*
+        {clock(sim.time)} SIM
       </text>
       <text x="18" y="445" fill="#788d70" fontSize="8">
         * SIMULATION ELAPSED TIME · SYNTHETIC AIRSPACE
@@ -212,8 +212,12 @@ function App() {
                 <b>{run.observation.score.safeLandings}</b> safe landings
               </span>
               <span>
-                <b>{run.observation.score.separationLosses}</b> separation
-                losses
+                <b>
+                  {run.observation.score.separationLosses +
+                    run.observation.score.runwayIncidents +
+                    run.observation.score.collisions}
+                </b>{" "}
+                safety incidents
               </span>
               <span>
                 {run.scenarioIndex + 1}/{run.scenarioCount} scenarios
