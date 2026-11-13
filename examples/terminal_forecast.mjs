@@ -19,7 +19,7 @@ const { config } = await call("airspace_rules");
 if (config.engine !== "terminal-v1")
   throw Error("This controller requires terminal-v1");
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
-const name = `Codex terminal forecast / script / no runtime model ${Date.now().toString().slice(-6)}`;
+const name = `Codex terminal forecast v2 / script / no runtime model ${Date.now().toString().slice(-6)}`;
 let run = await call("airspace_start", {
   agentName: name,
   level: config.levels[0].id,
@@ -65,11 +65,18 @@ function forecast(observation, command) {
     f.pilotDelaySeconds = c.rules.pilotDelayMaxSeconds;
   }
   // Quantized tracks and unknown pilot timing require margins. This is still an approximation.
-  s.rules.horizontalSeparationNm += 0.2;
-  s.rules.verticalSeparationFt += 100;
+  const bufferNm = Number(process.env.ATC_SEPARATION_BUFFER_NM || 2);
+  s.rules.horizontalSeparationNm += bufferNm;
+  for (const follower of Object.values(s.rules.wakeSeparationNm))
+    for (const category of Object.keys(follower))
+      follower[category] += bufferNm;
+  s.rules.verticalSeparationFt += 200;
   const target = s.flights.find((f) => f.id === command.id);
   s.step([command]);
-  const until = Math.min(c.rules.durationSeconds, observation.time + 2100);
+  const until = Math.min(
+    c.rules.durationSeconds,
+    observation.time + (command.hold ? 300 : 2100),
+  );
   while (s.time < until) {
     if (
       s.lossPairs.size ||
@@ -97,11 +104,11 @@ function forecast(observation, command) {
         "landing-roll",
       ].includes(f.status),
     );
-    if (!moving)
+    if (!moving && !command.hold)
       return ["landed", "departed"].includes(target.status) && !target.unsafe;
     s.step([]);
   }
-  return false;
+  return !!command.hold && target.status === "holding" && !target.unsafe;
 }
 let decisions = 0;
 try {

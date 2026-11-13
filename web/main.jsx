@@ -13,11 +13,13 @@ const MCP = "https://getsupers.com/airspace/mcp";
 const PROMPT = `Read https://getsupers.com/airspace/agent.md for the complete protocol. Compete in Airspace Arena and build the best air-traffic control automation you can. Connect to the public MCP server at ${MCP}. Read airspace_rules, then start the single hard San Diego challenge at level 6 with airspace_start using a unique agentName. Choose a unique leaderboard name that includes the model you are using, in the format "Controller name / exact model ID". Use the model identity exposed by your client or provider; do not guess. If it is unavailable, say "model unknown". For a script-only controller, say "script / no runtime model"; you may separately name the model that built it, if known. Keep the full name within 80 characters. Keep the returned sessionToken private. Use airspace_observe and airspace_act to maximize SAFE landings. Coordinate arrivals and departures on SAN runway09. Use headingDeg, altitudeFt, speedKnots, clear, hold, goAround and takeoff as documented. Allow for delayed pilot execution, sampled radar tracks, wind and heavy-aircraft wake spacing. Maximize safe completion, then reduce completion time and waiting. Never treat unfinished runs as fast completions. Every action needs the latest revision. An empty actions array advances time; steps can be 1–10. When scenarioComplete is true, call airspace_next. Repeat all 3 scenarios until finished so the server publishes the result. Inspect the leaderboard, analyze failures, improve your controller prompt or script, then retry the challenge with an improved controller. Read the effective per-tier rules; planes can collide and crash if commands are unsafe. Never claim a score that the server did not return. If MCP is unavailable, use the equivalent REST API documented at ${API.replace("/api", "/")}, with GET /rules, POST /sessions, GET /sessions/{id}, POST /sessions/{id}/actions, POST /sessions/{id}/next and GET /leaderboard. Send Authorization: Bearer <sessionToken> for session requests. Start body: {"agentName":"your-controller / your-model-id","level":6}. The service is free to access; any model-provider costs are yours.`;
 const clock = (t) =>
   `${String(Math.floor(t / 60)).padStart(2, "0")}:${String(t % 60).padStart(2, "0")}`;
-function Terminal({ sim, airport }) {
+function Terminal({ sim, airport, closeView }) {
   const flights = sim.flights.filter(
     (f) => f.airport === airport && !["ready", "scheduled"].includes(f.status),
   );
-  const range = Math.max(40, ...flights.map((f) => Math.hypot(f.x, f.y) + 5)),
+  const range = closeView
+      ? 12
+      : Math.max(50, ...flights.map((f) => Math.hypot(f.x, f.y) + 5)),
     scale = 185 / range;
   return (
     <svg
@@ -92,48 +94,56 @@ function Terminal({ sim, airport }) {
       <text x="244" y="235" fontSize="11" fill="#d9eab4">
         {airport}
       </text>
-      {flights.map((f) => {
-        const x = 230 + f.x * scale,
-          y = 230 - f.y * scale;
-        return (
-          <g key={f.id}>
-            {f.status === "approach" && (
-              <line
-                x1={x}
-                y1={y}
-                x2="230"
-                y2="230"
-                stroke="#c8e898"
-                strokeOpacity=".23"
-                strokeDasharray="3 4"
+      {flights
+        .filter((f) => Math.hypot(f.x, f.y) <= range)
+        .map((f) => {
+          const x = 230 + f.x * scale,
+            y = 230 - f.y * scale;
+          return (
+            <g key={f.id}>
+              {f.status === "approach" && (
+                <line
+                  x1={x}
+                  y1={y}
+                  x2="230"
+                  y2="230"
+                  stroke="#c8e898"
+                  strokeOpacity=".23"
+                  strokeDasharray="3 4"
+                />
+              )}
+              <path
+                d={`M${x} ${y - 5}l4 9-4-2-4 2z`}
+                transform={`rotate(${f.headingDeg || 0}, ${x}, ${y})`}
+                fill={
+                  f.unsafe
+                    ? "#f79176"
+                    : f.status === "approach"
+                      ? "#e8f9ad"
+                      : "#88ac8c"
+                }
               />
-            )}
-            <path
-              d={`M${x} ${y - 5}l4 9-4-2-4 2z`}
-              transform={`rotate(${f.headingDeg || 0}, ${x}, ${y})`}
-              fill={
-                f.unsafe
-                  ? "#f79176"
-                  : f.status === "approach"
-                    ? "#e8f9ad"
-                    : "#88ac8c"
-              }
-            />
-            <text x={x + 7} y={y - 6} fontSize="8" fill="#d4dfc5">
-              {f.id}
-            </text>
-            <text x={x + 7} y={y + 5} fontSize="7" fill="#92a58c">
-              {Math.round(f.altitudeFt / 100)} / {Math.round(f.speedKnots)}
-            </text>
-          </g>
-        );
-      })}
+              <text x={x + 7} y={y - 6} fontSize="8" fill="#d4dfc5">
+                {f.id}
+              </text>
+              <text x={x + 7} y={y + 5} fontSize="7" fill="#92a58c">
+                {Math.round(f.altitudeFt / 100)} / {Math.round(f.speedKnots)}
+              </text>
+            </g>
+          );
+        })}
       <text x="18" y="25" fill="#8d9b80" fontSize="9">
-        {airport} TERMINAL
+        {airport} {closeView ? "RUNWAY 09" : "TERMINAL"}
       </text>
       <text x="350" y="25" fill="#b4cc92" fontSize="9">
         {clock(sim.time)} SIM
       </text>
+      {closeView && (
+        <text x="18" y="428" fill="#a6bb99" fontSize="8">
+          {flights.filter((f) => Math.hypot(f.x, f.y) > range).length} aircraft
+          outside this view · switch to Sector
+        </text>
+      )}
       <text x="18" y="445" fill="#788d70" fontSize="8">
         * SIMULATION · DELAYED RADAR TRACKS · APPROXIMATE PROCEDURES
       </text>
@@ -145,6 +155,7 @@ function App() {
     [error, setError] = useState(""),
     [selected, setSelected] = useState(""),
     [airport, setAirport] = useState(""),
+    [closeView, setCloseView] = useState(true),
     [copied, setCopied] = useState(false),
     [leaderboard, setLeaderboard] = useState([]),
     [boardError, setBoardError] = useState("");
@@ -306,18 +317,53 @@ function App() {
                   {a.id}
                 </button>
               ))}
+              <button
+                onClick={() => setCloseView(true)}
+                className={closeView ? "active" : ""}
+              >
+                Runway · 12 NM
+              </button>
+              <button
+                onClick={() => setCloseView(false)}
+                className={!closeView ? "active" : ""}
+              >
+                Sector
+              </button>
             </div>
             <div className="radar-stage">
-              <Terminal sim={sim} airport={currentAirport} />
+              <Terminal
+                sim={sim}
+                airport={currentAirport}
+                closeView={closeView}
+              />
               <div className="flight-list">
                 {sim.flights
                   .filter((f) => f.airport === currentAirport)
+                  .sort((a, b) => {
+                    const order = {
+                      approach: 0,
+                      "landing-roll": 1,
+                      intercept: 2,
+                      departure: 3,
+                      "takeoff-roll": 4,
+                      "go-around": 5,
+                      vector: 6,
+                      holding: 7,
+                      ready: 8,
+                    };
+                    return (
+                      (order[a.status] ?? 9) - (order[b.status] ?? 9) ||
+                      Math.hypot(a.x, a.y) - Math.hypot(b.x, b.y)
+                    );
+                  })
                   .map((f) => (
                     <div key={f.id}>
                       <b>{f.id}</b>
                       <span>{f.status}</span>
                       <span>
-                        {Math.round(f.altitudeFt)} ft · {f.speedKnots} kt
+                        {Math.round(f.altitudeFt)} ft ·{" "}
+                        {Math.round(f.speedKnots)} kt ·{" "}
+                        {Math.hypot(f.x, f.y).toFixed(1)} NM
                       </span>
                     </div>
                   ))}
@@ -337,10 +383,22 @@ function App() {
                     "separation-loss",
                     "unstable-or-blocked-go-around",
                     "failed-approach-capture",
+                    "touchdown",
+                    "safe-landing",
+                    "sector-handoff",
                   ].includes(e.type),
                 )
                 .map((e, i) => (
-                  <div className="incident" key={`incident-${i}`}>
+                  <div
+                    className={
+                      ["touchdown", "safe-landing", "sector-handoff"].includes(
+                        e.type,
+                      )
+                        ? ""
+                        : "incident"
+                    }
+                    key={`incident-${i}`}
+                  >
                     <time>{clock(e.time)}</time>
                     <code>
                       {e.type}: {e.flights.join(" / ")}
