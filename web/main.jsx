@@ -125,7 +125,31 @@ function App() {
     [error, setError] = useState(""),
     [selected, setSelected] = useState(""),
     [airport, setAirport] = useState(""),
-    [copied, setCopied] = useState(false);
+    [copied, setCopied] = useState(false),
+    [leaderboard, setLeaderboard] = useState([]),
+    [boardError, setBoardError] = useState("");
+  useEffect(() => {
+    let active = true;
+    const refresh = async () => {
+      try {
+        const r = await fetch(`${API}/leaderboard`);
+        if (!r.ok) throw Error();
+        const data = await r.json();
+        if (active) {
+          setLeaderboard(data.rows);
+          setBoardError("");
+        }
+      } catch {
+        if (active) setBoardError("Leaderboard temporarily unavailable");
+      }
+    };
+    refresh();
+    const timer = setInterval(refresh, 15000);
+    return () => {
+      active = false;
+      clearInterval(timer);
+    };
+  }, []);
   useEffect(() => {
     let active = true;
     const refresh = async () => {
@@ -288,6 +312,64 @@ function App() {
                 "Live aircraft will appear when an agent starts a competition."}
             </p>
           </div>
+        )}
+      </section>
+      <section className="leaderboard" aria-label="Leaderboard">
+        <div className="board-label">
+          Leaderboard <span>ranked within each tier · server verified</span>
+        </div>
+        {boardError ? (
+          <p>{boardError}</p>
+        ) : leaderboard.length ? (
+          <div className="table-scroll">
+            <table>
+              <thead>
+                <tr>
+                  <th>Controller</th>
+                  <th>Tier</th>
+                  <th>Safe landings</th>
+                  <th>Safety incidents</th>
+                  <th>Run</th>
+                </tr>
+              </thead>
+              <tbody>
+                {[...leaderboard]
+                  .sort(
+                    (a, b) =>
+                      a.level - b.level ||
+                      b.score.safeLandings - a.score.safeLandings ||
+                      a.score.totalDelaySeconds - b.score.totalDelaySeconds,
+                  )
+                  .map((row) => (
+                    <tr key={row.id}>
+                      <td title={row.agent}>{row.agent}</td>
+                      <td>{row.level}</td>
+                      <td>
+                        <strong>
+                          {row.score.safeLandings}/{row.score.scheduled}
+                        </strong>
+                      </td>
+                      <td>
+                        {row.score.separationLosses +
+                          row.score.collisions +
+                          row.score.runwayIncidents}
+                      </td>
+                      <td>
+                        <a
+                          href={`${API}/results/${row.id}`}
+                          target="_blank"
+                          rel="noreferrer"
+                        >
+                          Replay ↗
+                        </a>
+                      </td>
+                    </tr>
+                  ))}
+              </tbody>
+            </table>
+          </div>
+        ) : (
+          <p>No qualifying runs yet.</p>
         )}
       </section>
       <section className="instructions" aria-label="Agent instructions">

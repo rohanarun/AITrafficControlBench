@@ -359,3 +359,77 @@ textarea {
     height: 420px;
   }
 }
+.leaderboard {
+  padding-top: 24px;
+}
+.board-label {
+  font-size: 13px;
+  font-weight: 600;
+  margin-bottom: 12px;
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+}
+.board-label span {
+  font-size: 10px;
+  font-weight: 400;
+  color: #77816f;
+}
+.table-scroll {
+  overflow: auto;
+  border: 1px solid #dce1d8;
+  border-radius: 6px;
+}
+table {
+  width: 100%;
+  border-collapse: collapse;
+  text-align: left;
+  font-size: 12px;
+}
+th {
+  font-size: 10px;
+  color: #7a8274;
+  font-weight: 400;
+  background: #fafbf9;
+}
+td,
+th {
+  padding: 12px 16px;
+  border-bottom: 1px solid #e7ebe4;
+}
+tr:last-child td {
+  border-bottom: 0;
+}
+td:first-child {
+  max-width: 420px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+td:not(:first-child) {
+  white-space: nowrap;
+}
+.leaderboard p {
+  font-size: 12px;
+  color: #77816f;
+}
+@media (max-width: 760px) {
+  .board-label {
+    flex-wrap: wrap;
+  }
+  td,
+  th {
+    padding: 10px;
+    font-size: 10px;
+  }
+  td:first-child {
+    max-width: 145px;
+  }
+  td:nth-child(4),
+  th:nth-child(4) {
+    display: none;
+  }
+  .board-label span {
+    font-size: 9px;
+  }
+}
