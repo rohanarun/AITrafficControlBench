@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 import { readFile, writeFile, mkdir } from "node:fs/promises";
 import path from "node:path";
+import { configFor } from "./config.js";
 import { spawn } from "node:child_process";
 import { once } from "node:events";
 import readline from "node:readline";
@@ -102,7 +103,7 @@ try {
       JSON.stringify(
         {
           verified: true,
-          score: verifyRun(config, run, {
+          score: verifyRun(configFor(run.version), run, {
             official: args.includes("--official"),
           }),
         },

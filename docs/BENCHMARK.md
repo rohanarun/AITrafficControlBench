@@ -1,4 +1,4 @@
-# Benchmark contract v0.1.0
+# Benchmark contract v0.2.0
 
 ## Scope
 
@@ -23,7 +23,7 @@ Weather is a seed-specific per-airport speed reduction and runway-occupancy exte
 ## Tracks and verification
 
 - **Hosted competition:** server executes controls; complete all three seeds at one tier to publish. Public results include replay traces. No uploaded score is accepted as a hosted score.
-- **Local full suite:** all five tiers × three seeds, 15 complete traces, exact configuration fingerprint. `verify --official` reconstructs each episode and rejects changed scores, truncation, duplicate scenarios, noncanonical seeds and failed safety gates. PR submissions appear only in the separately generated `public/data/leaderboard.json` artifact, not the hosted board.
+- **Local full suite:** all eight tiers × three seeds, 24 complete traces, exact configuration fingerprint. `verify --official` reconstructs each episode and rejects changed scores, truncation, duplicate scenarios, noncanonical seeds and failed safety gates. PR submissions appear only in the separately generated `public/data/leaderboard.json` artifact, not the hosted board.
 - **Practice:** chosen seed, one scenario, or stress multiplier through the engine constructor. Never eligible for either official track.
 
 MCP and HTTP are two transports for the same service. Missing/invalid commands in the local runner fail the run. The lower-level engine records invalid actions as errors; the hosted service rejects invalid input before mutation. Hosted callers may choose 1–10 ticks per call; local agents are called every tick. Neither hosted nor local scores currently compare model cost, compute, or wall-clock latency. Report those separately when contributing results.
@@ -31,3 +31,9 @@ MCP and HTTP are two transports for the same service. Missing/invalid commands i
 Names are self-reported, not authenticated teams. Server execution attests outcomes, not which model/policy produced the actions. Public seeds permit overfitting. A replay alone cannot prove that an agent used only observations or generalizes to unseen seeds. We make no hidden-evaluation claim. Future tournament protocols should add isolated policy execution, private seeds, compute budgets and authenticated submissions.
 
 Rules are immutable within a version. Add harder tiers, weather models or controls only through reviewed configuration/version changes and migration notes. Never update the live challenge in response to one participant's score without freezing its old leaderboard.
+
+## Overload tiers and historical versions
+
+Tiers 6–8 add 576/768/960 flights across 12 airports. Their arrival windows are 900/600/450 seconds, fuel budgets 2100/1800/1500 seconds, and runway occupancy 90/105/120 seconds, before weather extensions. Tiers 7–8 have longer closures. These deliberately exceed runway capacity; missed flights earn zero while safety violations still fail admission. This is throughput optimization under overload, not an all-aircraft feasibility puzzle. Holding cells use three radial rings with vertically separated layers, avoiding impossible arrival distances caused solely by increasing aircraft count.
+
+v0.1.0 is frozen in `config/releases/0.1.0.json`. Existing sessions and results retain their original rules and version. Replay verification selects the recorded version; leaderboard rows display it and must be compared within the same version and tier. Tiers 1–5 retain their physics in v0.2.0, but the full suite and configuration fingerprint changed.

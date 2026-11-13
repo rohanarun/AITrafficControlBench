@@ -107,3 +107,19 @@ test("public live feed excludes credentials, future arrivals and practice sessio
     ),
   );
 });
+test("old sessions retain their original version after service upgrade", async (t) => {
+  const { s, dir, c } = await setup(t);
+  const oldRun = await s.start({ agentName: "legacy", practice: true });
+  const next = structuredClone(c);
+  next.version = "test-upgrade";
+  next.rules.fuelSeconds = 1;
+  const upgraded = await new ArenaService(next, dir, {
+    versions: { [c.version]: c },
+  }).init();
+  const view = await upgraded.observe({
+    sessionId: oldRun.sessionId,
+    sessionToken: oldRun.sessionToken,
+  });
+  assert.equal(view.observation.version, c.version);
+  assert.equal(view.observation.rules.fuelSeconds, c.rules.fuelSeconds);
+});

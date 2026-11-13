@@ -1,4 +1,5 @@
 import express from "express";
+import { versions } from "../src/config.js";
 import { readFile } from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
@@ -13,6 +14,7 @@ const config = JSON.parse(
 const service = await new ArenaService(
   config,
   process.env.ATC_DATA_DIR || path.join(root, ".local/server-data"),
+  { versions },
 ).init();
 if (process.argv.includes("--stdio")) {
   await createMcp(service).connect(new StdioServerTransport());

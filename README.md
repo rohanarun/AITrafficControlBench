@@ -18,6 +18,17 @@ The arena does not call or charge for models. Your own model/client provider may
 
 The first documented live baseline and its server replay are in [`benchmark-results/`](benchmark-results/).
 
+## Verified baseline
+
+The Codex forecasting controller completed these live MCP competitions on November 13, 2026. Each tier includes all three canonical scenarios. These are server-executed script-controller results, not claims about a standalone language model's performance.
+
+| Tier | Safe landings | Safety incidents | Evidence |
+|---|---:|---:|---|
+| 1 | 24/24 | 0 | [Server replay](https://getsupers.com/airspace/api/results/ad98e0e4-a3da-4617-a80c-e5a9d1a5014b) |
+| 2 | 84/84 | 0 | [Server replay](https://getsupers.com/airspace/api/results/f54089ec-43ab-4786-ba7f-5aa16b6fa80d) |
+
+The exact public action replays are stored in [`benchmark-results/`](benchmark-results/). Run `node examples/mcp_forecast.mjs 1` (or `2`) to enter with the same observation-only policy. The controller forecasts all currently observed approaches through their touchdowns, including runway occupancy after each landing. It discards generated future arrivals and uses only current observations. Public-seed success does not establish unseen-scenario generalization or real-world ATC validity. The live viewer and leaderboard are at [getsupers.com/airspace](https://getsupers.com/airspace/).
+
 ## The competition
 
 | Tier | Challenge | Airports | Flights per scenario |
@@ -27,10 +38,15 @@ The first documented live baseline and its server replay are in [`benchmark-resu
 | 3 | Cross-country pressure | 4 | 80 |
 | 4 | Rush hour | 8 | 192 |
 | 5 | National saturation | 12 | 384 |
+| 6 | Arrival surge | 12 | 576 |
+| 7 | Hub gridlock | 12 | 768 |
+| 8 | Capacity crisis | 12 | 960 |
 
 Each hosted tier uses **three fixed seeds**, one simulated hour each. Rankings compare **total safe landings within the same tier**. Lower aggregate arrival-to-landing time breaks ties. Separation losses, collisions, or runway incidents disqualify the run. Fuel exhaustion and unfinished flights earn no landing credit. Public results include action replays.
 
-The local full-suite track evaluates all 15 scenarios; it is separate from the hosted per-tier competition. Its replay-verified JSON submissions are checked in CI and are not silently mixed with server-executed results.
+Version 0.2 adds overload tiers 6–8: arrivals are compressed into 900/600/450 seconds, fuel reserves fall to 2100/1800/1500 seconds, and runway occupancy rises to 90/105/120 seconds. Holding fixes use altitude layers to keep inbound distances bounded. At these traffic volumes, perfect completion is not generally feasible: maximize safe throughput under capacity limits. Collisions are simulated and crashes earn no landing credit. Historical v0.1 baselines remain labeled and replayable with their original configuration.
+
+The local full-suite track evaluates all 24 scenarios; it is separate from the hosted per-tier competition. Its replay-verified JSON submissions are checked in CI and are not silently mixed with server-executed results.
 
 Aircraft initially hold at assigned fixes. Your automation controls approach clearance and speed. A simple autopilot follows a straight descending path to a single abstract runway at each airport. Weather, runway closures and rising traffic create scheduling and conflict-management problems. This is **not a full-fidelity ATC system**: there are no departures, real procedures, inter-sector handoffs, aircraft performance envelopes or operational wake categories. Approximate US airport positions provide geographic context; airport sectors are simulated independently. See [benchmark rules and limitations](docs/BENCHMARK.md).
 
@@ -72,7 +88,7 @@ npm run benchmark -- --agent agents/model.js --name my-model --level 1 --out .lo
 npm run verify -- --file .local/run.json
 ```
 
-A local compatible model server can be used too. A complete suite makes up to **1,800 model requests** with the simple reference adapter. Start with one practice episode. No provider/model is automatically selected and no paid run is triggered during installation or tests.
+A local compatible model server can be used too. A complete suite makes up to **2,880 model requests** with the simple reference adapter. Start with one practice episode. No provider/model is automatically selected and no paid run is triggered during installation or tests.
 
 ### Any language, any policy
 

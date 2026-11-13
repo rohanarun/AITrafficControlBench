@@ -53,9 +53,9 @@ export class Simulation {
     if (!Number.isFinite(stress) || stress < 1 || stress > 10)
       throw new Error("Stress must be in [1,10]");
     this.config = structuredClone(config);
-    this.rules = this.config.rules;
     this.level = this.config.levels.find((l) => l.id === level);
     if (!this.level) throw new Error("Unknown level");
+    this.rules = { ...this.config.rules, ...this.level.rules };
     this.seed = seed;
     this.stress = stress;
     this.time = 0;
@@ -83,7 +83,11 @@ export class Simulation {
         const n = counts[airport.id]++,
           angle = ((n % r.gateCount) * 2 * Math.PI) / r.gateCount;
         const radius =
-          r.gateRadiusNm + Math.floor(n / r.gateCount) * r.gateRingSpacingNm;
+          r.gateRadiusNm +
+          (r.gateRings
+            ? Math.floor(n / r.gateCount) % r.gateRings
+            : Math.floor(n / r.gateCount)) *
+            r.gateRingSpacingNm;
         return {
           id: `AA${String(i + 1).padStart(4, "0")}`,
           airport: airport.id,
@@ -95,7 +99,11 @@ export class Simulation {
           fixX: Math.cos(angle) * radius,
           fixY: Math.sin(angle) * radius,
           phase: rng() * 2 * Math.PI,
-          altitudeFt: r.holdingAltitudeFt,
+          altitudeFt:
+            r.holdingAltitudeFt +
+            (r.gateRings
+              ? Math.floor(n / (r.gateCount * r.gateRings)) * r.holdingLayerFt
+              : 0),
           speedKnots: r.defaultSpeedKnots,
           fuelSeconds: r.fuelSeconds,
           status: "scheduled",
@@ -147,16 +155,14 @@ export class Simulation {
       remainingSeconds: this.rules.durationSeconds - this.time,
       rules: this.rules,
       airports: structuredClone(this.airports),
-      aircraft: this.flights
-        .filter(active)
-        .map((f) => ({
-          ...f,
-          distanceNm: hypot(f.x, f.y),
-          estimatedArrivalSeconds:
-            (hypot(f.x, f.y) /
-              (f.speedKnots * (1 - this.airport(f.airport).weather))) *
-            3600,
-        })),
+      aircraft: this.flights.filter(active).map((f) => ({
+        ...f,
+        distanceNm: hypot(f.x, f.y),
+        estimatedArrivalSeconds:
+          (hypot(f.x, f.y) /
+            (f.speedKnots * (1 - this.airport(f.airport).weather))) *
+          3600,
+      })),
       recentEvents: this.events.slice(-12),
       score: this.summary(),
     };

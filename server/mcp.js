@@ -46,7 +46,7 @@ export function createMcp(service) {
       scoring:
         "Per-tier: sum safe landings across 3 fixed seeds; lower total arrival-to-landing time breaks ties. Any separation loss, collision or runway incident fails the safety gate. Fuel exhaustion and unfinished flights earn zero. Call next after each completed scenario, including the last, to publish automatically.",
       mechanics:
-        "Holding aircraft orbit assigned fixes at 12000 feet. Clearance irreversibly starts a straight descent to the single abstract runway. Speed changes affect touchdown timing. Maintain horizontal OR vertical separation continuously; plan runway occupancy and announced closures. Different airports are independent terminal sectors.",
+        "Holding aircraft orbit assigned fixes at their reported altitudes, including stacked layers in overload tiers. Clearance irreversibly starts a straight descent to the single abstract runway. Speed changes affect touchdown timing. Maintain horizontal OR vertical separation continuously; plan runway occupancy and announced closures. Different airports are independent terminal sectors.",
       identity:
         "Display names are self-reported. Server execution verifies outcomes, not policy identity or unseen-seed generalization.",
     }),
@@ -63,7 +63,12 @@ export function createMcp(service) {
         .describe(
           "Unique controller name including the actual model ID. Use model unknown if not exposed, or script / no runtime model for script-only controllers. Do not guess.",
         ),
-      level: z.number().int().min(1).max(5).default(1),
+      level: z
+        .number()
+        .int()
+        .min(1)
+        .max(Math.max(...service.config.levels.map((l) => l.id)))
+        .default(1),
       practice: z.boolean().default(false),
       seed: z.number().int().min(0).max(4294967295).default(42),
     },

@@ -17,9 +17,10 @@ export class ArenaService {
   constructor(
     config,
     directory,
-    { maxSessions = 200, ttlMs = 24 * 3600 * 1000 } = {},
+    { maxSessions = 200, ttlMs = 24 * 3600 * 1000, versions = {} } = {},
   ) {
     this.config = config;
+    this.versions = { ...versions, [config.version]: config };
     this.directory = directory;
     this.maxSessions = maxSessions;
     this.ttlMs = ttlMs;
@@ -76,8 +77,14 @@ export class ArenaService {
       collisionPairs: [...sim.collisionPairs],
     };
   }
+  configFor(record) {
+    const version = record.version || "0.1.0";
+    if (!this.versions[version])
+      throw fail("Unsupported stored benchmark version");
+    return this.versions[version];
+  }
   restore(record) {
-    const s = new Simulation(this.config, {
+    const s = new Simulation(this.configFor(record), {
       level: record.level,
       seed: record.seeds[record.index],
     });
@@ -141,6 +148,7 @@ export class ArenaService {
         sim = new Simulation(this.config, { level, seed: seeds[0] });
       const record = {
         id,
+        version: this.config.version,
         token: randomBytes(32).toString("hex"),
         agentName: agentName.trim(),
         level,
@@ -208,7 +216,7 @@ export class ArenaService {
       if (r.index + 1 < r.seeds.length) {
         r.index++;
         r.state = this.snapshot(
-          new Simulation(this.config, {
+          new Simulation(this.configFor(r), {
             level: r.level,
             seed: r.seeds[r.index],
           }),
@@ -219,8 +227,8 @@ export class ArenaService {
           id: r.id,
           schema: 1,
           agent: r.agentName,
-          version: this.config.version,
-          configHash: fingerprint(this.config),
+          version: this.configFor(r).version,
+          configHash: fingerprint(this.configFor(r)),
           level: r.level,
           createdAt: new Date(r.createdAt).toISOString(),
           completedAt: new Date().toISOString(),
@@ -261,20 +269,18 @@ export class ArenaService {
               !a.finished && Date.now() - (a.updatedAt || a.createdAt) < 30000,
             ) || (b.updatedAt || b.createdAt) - (a.updatedAt || a.createdAt),
       );
-      const views = runs
-        .slice(0, 12)
-        .map((r) => ({
-          sessionId: r.id,
-          agentName: r.agentName,
-          level: r.level,
-          scenarioIndex: r.index,
-          scenarioCount: r.seeds.length,
-          revision: r.revision,
-          updatedAt: r.updatedAt || r.createdAt,
-          finished: r.finished,
-          observation: this.restore(r).observation(),
-          commands: r.state.actions.filter((t) => t.actions.length).slice(-8),
-        }));
+      const views = runs.slice(0, 12).map((r) => ({
+        sessionId: r.id,
+        agentName: r.agentName,
+        level: r.level,
+        scenarioIndex: r.index,
+        scenarioCount: r.seeds.length,
+        revision: r.revision,
+        updatedAt: r.updatedAt || r.createdAt,
+        finished: r.finished,
+        observation: this.restore(r).observation(),
+        commands: r.state.actions.filter((t) => t.actions.length).slice(-8),
+      }));
       const value = { run: views[0] || null, runs: views };
       this.liveCache = { at: Date.now(), value };
       return value;
@@ -307,7 +313,7 @@ export class ArenaService {
         levels: this.config.levels,
         verification: "server-executed",
         rows: rows.filter((r) => {
-          const key = `${r.level}:${r.agent}`;
+          const key = `${r.version}:${r.level}:${r.agent}`;
           if (seen.has(key)) return false;
           seen.add(key);
           return true;

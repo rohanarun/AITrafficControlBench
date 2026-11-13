@@ -56,7 +56,7 @@ export function verifyRun(config, run, { official = false } = {}) {
     if (
       !Array.isArray(ep.trace) ||
       ep.trace.length !==
-        Math.ceil(config.rules.durationSeconds / config.rules.stepSeconds)
+        Math.ceil(sim.rules.durationSeconds / sim.rules.stepSeconds)
     )
       throw new Error("Incomplete or oversized trace");
     for (const tick of ep.trace) {

@@ -1,3 +1,4 @@
+import { configFor } from "../src/config.js";
 import { readFile, readdir, writeFile, mkdir } from "node:fs/promises";
 import { verifyRun, digest } from "../src/evaluation.js";
 const config = JSON.parse(
@@ -12,9 +13,10 @@ for (const file of (await readdir(root))
   if (Buffer.byteLength(raw) > 20 * 1024 * 1024)
     throw new Error(`${file}: submission too large`);
   const run = JSON.parse(raw),
-    score = verifyRun(config, run, { official: true });
+    score = verifyRun(configFor(run.version), run, { official: true });
   rows.push({
     agent: run.agent,
+    version: run.version,
     score,
     runHash: digest(run),
     file,

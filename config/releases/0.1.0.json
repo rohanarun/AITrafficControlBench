@@ -1,0 +1,85 @@
+{
+  "version": "0.1.0",
+  "suite": "national-v1",
+  "seeds": [104729, 130363, 155921],
+  "rules": {
+    "stepSeconds": 30,
+    "durationSeconds": 3600,
+    "arrivalWindowSeconds": 1500,
+    "horizontalSeparationNm": 3,
+    "verticalSeparationFt": 1000,
+    "collisionNm": 0.12,
+    "collisionFt": 100,
+    "runwayOccupancySeconds": 75,
+    "minSpeedKnots": 120,
+    "maxSpeedKnots": 220,
+    "defaultSpeedKnots": 160,
+    "fuelSeconds": 2700,
+    "glideFeetPerNm": 300,
+    "holdingAltitudeFt": 12000,
+    "holdingRadiusNm": 0.45,
+    "holdingPeriodSeconds": 180,
+    "gateRadiusNm": 24,
+    "gateRingSpacingNm": 8,
+    "gateCount": 8,
+    "closureStartSeconds": 900,
+    "closureEndSeconds": 1200,
+    "maxActionsPerStep": 512
+  },
+  "airports": [
+    { "id": "ATL", "name": "Atlanta", "lat": 33.64, "lon": -84.43 },
+    { "id": "LAX", "name": "Los Angeles", "lat": 33.94, "lon": -118.41 },
+    { "id": "ORD", "name": "Chicago", "lat": 41.97, "lon": -87.91 },
+    { "id": "DFW", "name": "Dallas–Fort Worth", "lat": 32.9, "lon": -97.04 },
+    { "id": "DEN", "name": "Denver", "lat": 39.86, "lon": -104.67 },
+    { "id": "JFK", "name": "New York", "lat": 40.64, "lon": -73.78 },
+    { "id": "SFO", "name": "San Francisco", "lat": 37.62, "lon": -122.38 },
+    { "id": "SEA", "name": "Seattle", "lat": 47.45, "lon": -122.31 },
+    { "id": "MIA", "name": "Miami", "lat": 25.79, "lon": -80.29 },
+    { "id": "BOS", "name": "Boston", "lat": 42.37, "lon": -71.01 },
+    { "id": "PHX", "name": "Phoenix", "lat": 33.43, "lon": -112.01 },
+    { "id": "LAS", "name": "Las Vegas", "lat": 36.08, "lon": -115.15 }
+  ],
+  "levels": [
+    {
+      "id": 1,
+      "name": "First approach",
+      "airports": 1,
+      "flights": 8,
+      "weather": 0,
+      "closures": false
+    },
+    {
+      "id": 2,
+      "name": "Coast to coast",
+      "airports": 2,
+      "flights": 28,
+      "weather": 0,
+      "closures": false
+    },
+    {
+      "id": 3,
+      "name": "Cross-country pressure",
+      "airports": 4,
+      "flights": 80,
+      "weather": 0.1,
+      "closures": false
+    },
+    {
+      "id": 4,
+      "name": "Rush hour",
+      "airports": 8,
+      "flights": 192,
+      "weather": 0.2,
+      "closures": true
+    },
+    {
+      "id": 5,
+      "name": "National saturation",
+      "airports": 12,
+      "flights": 384,
+      "weather": 0.3,
+      "closures": true
+    }
+  ]
+}

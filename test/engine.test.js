@@ -149,11 +149,37 @@ test("verifier rejects forged scores, truncation, noncanonical and duplicate epi
 });
 test("difficulty raises airports and traffic; stress is practice only", () => {
   for (let i = 1; i < config.levels.length; i++) {
-    assert.ok(config.levels[i].airports > config.levels[i - 1].airports);
+    assert.ok(config.levels[i].airports >= config.levels[i - 1].airports);
     assert.ok(config.levels[i].flights > config.levels[i - 1].flights);
   }
   assert.equal(
     new Simulation(config, { level: 5, stress: 2 }).flights.length,
     768,
   );
+});
+test("unsafe simultaneous clearances cause real collisions on a canonical scenario", () => {
+  const s = new Simulation(config, { level: 1, seed: 42 });
+  while (s.time < 1500) s.step([]);
+  s.step(
+    s
+      .observation()
+      .aircraft.map((f) => ({
+        id: f.id,
+        clear: true,
+        speedKnots: s.rules.maxSpeedKnots,
+      })),
+  );
+  finish(s);
+  assert.ok(s.summary().collisions > 0);
+  assert.equal(s.summary().safeLandings, 0);
+  assert.equal(s.summary().eligible, false);
+});
+test("overload tiers apply effective rules and bounded layered holding fixes", () => {
+  const s = new Simulation(config, { level: 8, seed: 42 });
+  assert.equal(s.flights.length, 960);
+  assert.equal(s.rules.fuelSeconds, 1500);
+  assert.equal(s.rules.arrivalWindowSeconds, 450);
+  assert.ok(s.flights.every((f) => Math.hypot(f.fixX, f.fixY) <= 40.001));
+  assert.ok(s.flights.some((f) => f.altitudeFt > 12000));
+  assert.equal(s.observation().rules.runwayOccupancySeconds, 120);
 });

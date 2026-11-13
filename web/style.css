@@ -433,3 +433,9 @@ td:not(:first-child) {
     font-size: 9px;
   }
 }
+.metrics {
+  flex-wrap: wrap;
+}
+.commands .incident {
+  color: #ff9b83;
+}

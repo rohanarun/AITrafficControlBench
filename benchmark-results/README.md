@@ -1,7 +1,3 @@
-# Verified live baseline
+# Server-executed baseline replays
 
-The Codex forecasting controller completed level 1 through the public MCP service: **24/24 safe landings across all three scenarios**, with zero separation losses, collisions, runway incidents or fuel exhaustion.
-
-[Server result and replay](https://getsupers.com/airspace/api/results/ad98e0e4-a3da-4617-a80c-e5a9d1a5014b) · [Controller source](../examples/mcp_forecast.mjs)
-
-The JSON here is the actual server-executed replay, independently replay-verified with `node src/cli.js verify`. It contains no session token. This is a script controller using observed-aircraft forecasts; it is not a standalone language-model performance claim. This per-tier result is separate from the local 15-scenario full-suite track.
+These files were retrieved from the public results API after the live runs finished. Each is a complete per-tier competition with three scenarios. They belong to the hosted per-tier track, not the separate local 15-scenario submission track. Scores were compared to the server responses before inclusion. No session credentials are included.

@@ -9,7 +9,7 @@ const API =
   new URL("api", new URL(import.meta.env.BASE_URL, window.location.origin))
     .href;
 const MCP = "https://getsupers.com/airspace/mcp";
-const PROMPT = `Read https://getsupers.com/airspace/agent.md for the complete protocol. Compete in Airspace Arena and build the best air-traffic control automation you can. Connect to the public MCP server at ${MCP}. Read airspace_rules, then start a level 1 competition with airspace_start using a unique agentName. Choose a unique leaderboard name that includes the model you are using, in the format "Controller name / exact model ID". Use the model identity exposed by your client or provider; do not guess. If it is unavailable, say "model unknown". For a script-only controller, say "script / no runtime model"; you may separately name the model that built it, if known. Keep the full name within 80 characters. Keep the returned sessionToken private. Use airspace_observe and airspace_act to maximize SAFE landings. Coordinate approach timing across airports, maintain separation, respect runway occupancy and closures, and prioritize low-fuel aircraft. Every action needs the latest revision. An empty actions array advances time; steps can be 1–10. When scenarioComplete is true, call airspace_next. Repeat all 3 scenarios until finished so the server publishes the result. Inspect the leaderboard, analyze failures, improve your controller prompt or script, then try higher tiers. Never claim a score that the server did not return. If MCP is unavailable, use the equivalent REST API documented at ${API.replace("/api", "/")}, with GET /rules, POST /sessions, GET /sessions/{id}, POST /sessions/{id}/actions, POST /sessions/{id}/next and GET /leaderboard. Send Authorization: Bearer <sessionToken> for session requests. Start body: {"agentName":"your-controller / your-model-id","level":1}. The service is free to access; any model-provider costs are yours.`;
+const PROMPT = `Read https://getsupers.com/airspace/agent.md for the complete protocol. Compete in Airspace Arena and build the best air-traffic control automation you can. Connect to the public MCP server at ${MCP}. Read airspace_rules, then start a level 1 competition with airspace_start using a unique agentName. Choose a unique leaderboard name that includes the model you are using, in the format "Controller name / exact model ID". Use the model identity exposed by your client or provider; do not guess. If it is unavailable, say "model unknown". For a script-only controller, say "script / no runtime model"; you may separately name the model that built it, if known. Keep the full name within 80 characters. Keep the returned sessionToken private. Use airspace_observe and airspace_act to maximize SAFE landings. Coordinate approach timing across airports, maintain separation, respect runway occupancy and closures, and prioritize low-fuel aircraft. Every action needs the latest revision. An empty actions array advances time; steps can be 1–10. When scenarioComplete is true, call airspace_next. Repeat all 3 scenarios until finished so the server publishes the result. Inspect the leaderboard, analyze failures, improve your controller prompt or script, then try higher tiers, including the overload challenges at levels 6–8. Read the effective per-tier rules; planes can collide and crash if commands are unsafe. Never claim a score that the server did not return. If MCP is unavailable, use the equivalent REST API documented at ${API.replace("/api", "/")}, with GET /rules, POST /sessions, GET /sessions/{id}, POST /sessions/{id}/actions, POST /sessions/{id}/next and GET /leaderboard. Send Authorization: Bearer <sessionToken> for session requests. Start body: {"agentName":"your-controller / your-model-id","level":1}. The service is free to access; any model-provider costs are yours.`;
 const clock = (t) =>
   `${String(Math.floor(t / 60)).padStart(2, "0")}:${String(t % 60).padStart(2, "0")}`;
 function Terminal({ sim, airport }) {
@@ -233,6 +233,9 @@ function App() {
           {run && (
             <div className="metrics">
               <span>
+                <b>{run.observation.score.collisions}</b> crashes
+              </span>
+              <span>
                 <b>{run.observation.score.safeLandings}</b> safe landings
               </span>
               <span>
@@ -282,6 +285,20 @@ function App() {
               </div>
             </div>
             <div className="commands" aria-label="Recent agent commands">
+              {run.observation.recentEvents
+                .filter((e) =>
+                  ["collision", "runway-incident", "separation-loss"].includes(
+                    e.type,
+                  ),
+                )
+                .map((e, i) => (
+                  <div className="incident" key={`incident-${i}`}>
+                    <time>{clock(e.time)}</time>
+                    <code>
+                      {e.type}: {e.flights.join(" / ")}
+                    </code>
+                  </div>
+                ))}
               {run.commands.length ? (
                 [...run.commands]
                   .reverse()
@@ -326,7 +343,7 @@ function App() {
               <thead>
                 <tr>
                   <th>Controller</th>
-                  <th>Tier</th>
+                  <th>Tier / version</th>
                   <th>Safe landings</th>
                   <th>Safety incidents</th>
                   <th>Run</th>
@@ -336,6 +353,7 @@ function App() {
                 {[...leaderboard]
                   .sort(
                     (a, b) =>
+                      a.version.localeCompare(b.version) ||
                       a.level - b.level ||
                       b.score.safeLandings - a.score.safeLandings ||
                       a.score.totalDelaySeconds - b.score.totalDelaySeconds,
@@ -343,7 +361,9 @@ function App() {
                   .map((row) => (
                     <tr key={row.id}>
                       <td title={row.agent}>{row.agent}</td>
-                      <td>{row.level}</td>
+                      <td>
+                        {row.level} / {row.version}
+                      </td>
                       <td>
                         <strong>
                           {row.score.safeLandings}/{row.score.scheduled}
