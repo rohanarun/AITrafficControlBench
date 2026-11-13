@@ -1,6 +1,6 @@
 {
-  "version": "0.3.0",
-  "suite": "san-terminal-challenge-v1",
+  "version": "0.3.1",
+  "suite": "san-terminal-challenge-v2",
   "seeds": [
     104729,
     130363,
@@ -74,7 +74,10 @@
     "entryLanes": 8,
     "initialArrivals": 12,
     "initialDepartureQueue": 3,
-    "landingDecelerationKnotsPerSecond": 3.5
+    "landingDecelerationKnotsPerSecond": 3.5,
+    "uniqueEntryCells": true,
+    "entryAltitudeLayers": 5,
+    "entryLayerSpacingFt": 2000
   },
   "airports": [
     {
@@ -179,7 +182,8 @@
     },
     "performance": "Representative medium/heavy jet envelopes are configurable benchmark assumptions, not OpenAP/BADA or aircraft certification data.",
     "separation": "Conservative simplified 3NM/1000ft plus heavy-following wake envelope. Not complete JO7110.65/CWT implementation.",
-    "fidelity": "Research benchmark; not controller reviewed or validated against operational recordings."
+    "fidelity": "Research benchmark; not controller reviewed or validated against operational recordings.",
+    "trafficRevision": "v0.3.1 allocates unique horizontal/vertical entry cells; v0.3.0 reused cells after 40 arrivals and could introduce uncommanded spawn conflicts."
   },
   "scoring": {
     "order": [

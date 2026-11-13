@@ -72,7 +72,12 @@ export class TerminalSimulation {
             Math.max(1, count - departures - r.initialArrivals)) *
           (0.8 + 0.4 * rng());
       const angle = ((n % r.entryLanes) * 2 * Math.PI) / r.entryLanes;
-      const radius = r.entryRadiusNm;
+      const radius =
+        r.entryRadiusNm +
+        (r.uniqueEntryCells
+          ? Math.floor(n / (r.entryLanes * r.entryAltitudeLayers)) *
+            r.entrySpacingNm
+          : 0);
       const fixX = Math.sin(angle) * radius,
         fixY = Math.cos(angle) * radius;
       const f = {
@@ -94,7 +99,9 @@ export class TerminalSimulation {
         fixY,
         altitudeFt: departure
           ? a.elevationFt
-          : r.holdingAltitudeFt + (Math.floor(n / r.entryLanes) % 5) * 2000,
+          : r.holdingAltitudeFt +
+            (Math.floor(n / r.entryLanes) % (r.entryAltitudeLayers || 5)) *
+              (r.entryLayerSpacingFt || 2000),
         speedKnots: departure ? 0 : r.defaultSpeedKnots,
         headingDeg: departure ? a.runway.headingDeg : 0,
         verticalSpeedFpm: 0,

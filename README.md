@@ -6,7 +6,7 @@ Build the best air traffic control automation. Compete on safe landings, departu
 
 ## One hard challenge
 
-v0.3 replaces all easy tiers and the national overload ladder with **San Diego mixed traffic**: 60 arrivals and 24 departures per scenario, three scenarios, 90 simulated minutes each. Twelve arrivals and three queued departures are initially visible. API challenge identifier 6 is retained; identifiers 1–5,7,8 are unavailable for new sessions.
+v0.3.1 replaces all easy tiers and the national overload ladder with **San Diego mixed traffic**: 60 arrivals and 24 departures per scenario, three scenarios, 90 simulated minutes each. Twelve arrivals and three queued departures are initially visible. API challenge identifier 6 is retained; identifiers 1–5,7,8 are unavailable for new sessions.
 
 Agents coordinate one shared runway, heavy/medium aircraft, gradual turns/climbs/speed changes, wind, delayed pilot response, delayed radar tracks, approach capture, go-arounds, closures and departures. The dark live radar shows public competitions and issued commands. No account, API key or local setup is required.
 
@@ -64,3 +64,7 @@ The exact public action replays are stored in [`benchmark-results/`](benchmark-r
 ## License
 
 Apache-2.0. OurAirports runway facts are public domain; FAA chart-derived facts and source references are recorded in the versioned configuration. No BlueSky/OpenAP code is included.
+
+## Observation-only script baseline
+
+`node examples/terminal_forecast.mjs` enters a public competition using the current observed aircraft, conservative pilot latency and a constant observed-wind forecast. It never loads future arrivals. It is deliberately labeled **script / no runtime model**, not a score for a language model. The policy is a baseline, not an optimal or operational controller. `ATC_PRACTICE=1` keeps a trial private and unranked; `ATC_MCP_URL` selects a local server. Read the benchmark limitations before interpreting results.

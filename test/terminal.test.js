@@ -238,3 +238,15 @@ test("ground rollout moves along the runway before vacation and cannot earn earl
   s.step([]);
   assert.ok(s.runwayCoordinates(f).along > p);
 });
+test("arrival generator never injects traffic into occupied holding cells across official seeds", () => {
+  for (const seed of currentConfig.seeds) {
+    const s = new Simulation(currentConfig, { seed });
+    const cells = s.flights
+      .filter((f) => f.kind === "arrival")
+      .map((f) => `${f.fixX.toFixed(3)},${f.fixY.toFixed(3)},${f.altitudeFt}`);
+    assert.equal(new Set(cells).size, cells.length);
+    while (!s.done) s.step([]);
+    assert.equal(s.summary().separationLosses, 0, `seed ${seed}`);
+    assert.equal(s.summary().collisions, 0);
+  }
+});

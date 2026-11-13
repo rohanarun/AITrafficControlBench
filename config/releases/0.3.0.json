@@ -1,0 +1,198 @@
+{
+  "version": "0.3.0",
+  "suite": "san-terminal-challenge-v1",
+  "seeds": [
+    104729,
+    130363,
+    155921
+  ],
+  "rules": {
+    "stepSeconds": 10,
+    "durationSeconds": 5400,
+    "arrivalWindowSeconds": 3600,
+    "maxActionsPerStep": 128,
+    "horizontalSeparationNm": 3,
+    "verticalSeparationFt": 1000,
+    "collisionNm": 0.025,
+    "collisionFt": 50,
+    "minSpeedKnots": 110,
+    "maxSpeedKnots": 250,
+    "defaultSpeedKnots": 210,
+    "fuelSeconds": 3600,
+    "maxAltitudeFt": 16000,
+    "minVectorAltitudeFt": 2000,
+    "holdingRadiusNm": 3,
+    "holdingAltitudeFt": 6000,
+    "bankAngleDeg": 25,
+    "accelerationKnotsPerSecond": 1,
+    "verticalAccelerationFtPerSecond2": 2,
+    "pilotDelayMinSeconds": 3,
+    "pilotDelayMaxSeconds": 8,
+    "sensorPeriodSeconds": 5,
+    "sensorLatencySeconds": 3,
+    "sensorPositionResolutionNm": 0.01,
+    "sensorAltitudeResolutionFt": 25,
+    "runwayOccupancySeconds": 60,
+    "departureWakeSeconds": 120,
+    "closureStartSeconds": 1800,
+    "closureEndSeconds": 1980,
+    "approachCaptureDistanceNm": 12,
+    "approachCaptureCrossTrackNm": 0.8,
+    "approachCaptureHeadingDeg": 30,
+    "approachCaptureAltitudeToleranceFt": 200,
+    "stabilizedDistanceNm": 2,
+    "stabilizedHeightToleranceFt": 250,
+    "landingSpeedToleranceKnots": 15,
+    "landingCrossTrackNm": 0.06,
+    "landingHeadingToleranceDeg": 10,
+    "goAroundAltitudeFt": 5000,
+    "handoffDistanceNm": 30,
+    "minimumDepartureAltitudeFt": 4000,
+    "windBaseKnots": 8,
+    "windVariationKnots": 5,
+    "windPeriodSeconds": 1200,
+    "windShearKnotsPer1000Ft": 0.5,
+    "emergencyFuelFraction": 0.08,
+    "wakeLateralNm": 0.4,
+    "wakeVerticalFt": 1000,
+    "wakeSeparationNm": {
+      "H": {
+        "H": 4,
+        "M": 5
+      },
+      "M": {
+        "H": 3,
+        "M": 3
+      }
+    },
+    "arrivalIntervalsSeconds": [
+      50,
+      70
+    ],
+    "entryRadiusNm": 32,
+    "entrySpacingNm": 12,
+    "entryLanes": 8,
+    "initialArrivals": 12,
+    "initialDepartureQueue": 3,
+    "landingDecelerationKnotsPerSecond": 3.5
+  },
+  "airports": [
+    {
+      "id": "SAN",
+      "icao": "KSAN",
+      "name": "San Diego International",
+      "lat": 32.737129,
+      "lon": -117.204371,
+      "elevationFt": 17,
+      "runway": {
+        "id": "09",
+        "headingDeg": 106.0,
+        "lengthNm": 1.547204466007913,
+        "widthNm": 0.032915742282904226,
+        "thresholdX": 0.15820321124966572,
+        "thresholdY": -0.045364040838067554,
+        "glideAngleDeg": 3.1,
+        "thresholdCrossingHeightFt": 55,
+        "decisionAltitudeFt": 258
+      },
+      "procedure": {
+        "name": "ILS Y RWY 09 \u2014 simplified vector-to-final benchmark",
+        "chart": "https://aeronav.faa.gov/d-tpp/2611/00373IYLY9.PDF",
+        "chartCycle": "2611",
+        "magneticFinalCourseDeg": 95,
+        "interceptAltitudeFt": 2000,
+        "missedApproachAltitudeFt": 5000,
+        "limitations": "Final glide angle and altitude references sourced from chart. Fixes, full missed approach and SID are NOT encoded. Go-around climbs runway heading for agent re-vectoring; departure is synthetic runway heading to sector boundary. No terrain model."
+      }
+    }
+  ],
+  "levels": [
+    {
+      "id": 6,
+      "name": "San Diego \u2014 mixed traffic challenge",
+      "airports": 1,
+      "flights": 84,
+      "departures": 24,
+      "weather": 1,
+      "closures": true
+    }
+  ],
+  "engine": "terminal-v1",
+  "aircraftProfiles": [
+    {
+      "id": "medium-jet",
+      "wake": "M",
+      "minSpeedKnots": 120,
+      "approachSpeedKnots": 140,
+      "takeoffSpeedKnots": 155,
+      "maxClimbFpm": 2200,
+      "maxDescentFpm": 1800,
+      "takeoffAccelerationKnotsPerSecond": 3.5,
+      "rolloutSeconds": 55,
+      "fuelBurnKgPerSecond": 0.65
+    },
+    {
+      "id": "heavy-jet",
+      "wake": "H",
+      "minSpeedKnots": 135,
+      "approachSpeedKnots": 155,
+      "takeoffSpeedKnots": 170,
+      "maxClimbFpm": 1800,
+      "maxDescentFpm": 1500,
+      "takeoffAccelerationKnotsPerSecond": 3,
+      "rolloutSeconds": 75,
+      "fuelBurnKgPerSecond": 1.8
+    }
+  ],
+  "provenance": {
+    "runway": {
+      "url": "https://github.com/davidmegginson/ourairports-data/blob/main/runways.csv",
+      "retrieved": "2026-11-13",
+      "sha256": "e1026851f59e3714c2074432e469aeb9c3b83908315cfa547f353ae607f74a1d",
+      "license": "Public domain",
+      "record": {
+        "id": "244186",
+        "airport_ref": "3862",
+        "airport_ident": "KSAN",
+        "length_ft": "9401",
+        "width_ft": "200",
+        "surface": "ASP",
+        "lighted": "1",
+        "closed": "0",
+        "le_ident": "09",
+        "le_latitude_deg": "32.737129",
+        "le_longitude_deg": "-117.204371",
+        "le_elevation_ft": "14",
+        "le_heading_degT": "106",
+        "le_displaced_threshold_ft": "1000",
+        "he_ident": "27",
+        "he_latitude_deg": "32.730004",
+        "he_longitude_deg": "-117.17499",
+        "he_elevation_ft": "13",
+        "he_heading_degT": "286",
+        "he_displaced_threshold_ft": "1806"
+      }
+    },
+    "approachChart": {
+      "url": "https://aeronav.faa.gov/d-tpp/2611/00373IYLY9.PDF",
+      "sha256": "bceb8bb2af7f96999b749d9f3f8013928edec35d041767c8f63ebe94ae98312b"
+    },
+    "performance": "Representative medium/heavy jet envelopes are configurable benchmark assumptions, not OpenAP/BADA or aircraft certification data.",
+    "separation": "Conservative simplified 3NM/1000ft plus heavy-following wake envelope. Not complete JO7110.65/CWT implementation.",
+    "fidelity": "Research benchmark; not controller reviewed or validated against operational recordings."
+  },
+  "scoring": {
+    "order": [
+      "safety gate",
+      "safeLandings descending",
+      "safeDepartures descending",
+      "timeToCompleteSeconds ascending when all flights safely complete",
+      "unservedTimeSeconds ascending",
+      "fuelUsedKg ascending"
+    ],
+    "unservedTimeSeconds": "Sum spawn-to-safe-completion time, or spawn-to-current-horizon time for every uncompleted/unsafe flight. Crashes/exhaustion never shorten the penalty.",
+    "comparison": "Same version and challenge only. Public fixed seeds are reproducible, not a hidden evaluation.",
+    "timeToCompleteSeconds": "Simulated time until all scheduled flights safely land and vacate runway or depart through sector boundary; null unless every flight completes safely. Sum across scenarios; whole run null if any scenario incomplete.",
+    "wallClockSeconds": "Elapsed real time from session creation to finalization, including agent computation, network latency and idle time. Diagnostic, not ranking, because hardware/network budgets are not standardized."
+  }
+}

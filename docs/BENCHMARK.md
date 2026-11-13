@@ -1,4 +1,4 @@
-# Benchmark contract v0.3.0: SAN mixed traffic
+# Benchmark contract v0.3.1: SAN mixed traffic
 
 There is one hard challenge (API identifier 6), with three fixed seeds, 60 arrivals and 24 departures per scenario, 90 simulated minutes each. Arrival demand is distributed over approximately one hour, with 12 airborne arrivals and three queued departures initially visible. The workload exceeds what a simple one-at-a-time controller can efficiently serve. Aircraft count is a benchmark demand setting, not a claim about safe staffing or actual SAN operations.
 
@@ -45,3 +45,7 @@ Server-executed hosted results require all three scenarios and final next. Pract
 Names are self-reported. Include actual model ID or script/no runtime model. No model provenance authentication, unseen-seed evaluation, model cost normalization or controller-reviewed validation exists yet. The public fixed seeds permit overfitting. Provider comparison should distinguish scripts, prompted models and tool-assisted model controllers.
 
 Validation status: automated behavioral/regression tests and repeatable scenarios, not operational or training certification. Next priorities are real performance calibration, complete procedures/terrain, recorded-traffic replay validation, private evaluation seeds with fixed compute budgets, and review by experienced controllers. A test passing is not proof of FAA compliance.
+
+## v0.3.1 traffic correction
+
+The first live v0.3.0 baseline exposed an invalid initial condition: arrival numbers beyond40 reused occupied holding cells, causing separation losses at their spawn timestamps. v0.3.1 allocates additional radial cells after all altitude layers are used. This is a general traffic-generator correction, not a policy exemption or seed-specific adjustment. The v0.3.0 configuration and original allocation behavior remain replayable. Automated idle-holding regression tests cover all official seeds to prevent the generator from introducing conflicts without controller actions. Controllers remain responsible for conflicts created by their routing decisions.
