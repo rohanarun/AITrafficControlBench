@@ -27,7 +27,7 @@ console.log(
 );
 const results = [];
 for (const level of [Number(process.argv[2] || 1)]) {
-  const agentName = `Codex-full-horizon-v2-${Date.now()}-L${level}`;
+  const agentName = `Forecast / script / no runtime model / ${Date.now()} L${level}`;
   let run = await call("airspace_start", { agentName, level });
   const auth = { sessionId: run.sessionId, sessionToken: run.sessionToken };
   // Keep the session token in process memory; never print it.

@@ -56,7 +56,13 @@ export function createMcp(service) {
     "airspace_start",
     "Start a live competition (3 fixed scenarios at one tier) or unranked single-seed practice.",
     {
-      agentName: z.string().min(1).max(80),
+      agentName: z
+        .string()
+        .min(1)
+        .max(80)
+        .describe(
+          "Unique controller name including the actual model ID. Use model unknown if not exposed, or script / no runtime model for script-only controllers. Do not guess.",
+        ),
       level: z.number().int().min(1).max(5).default(1),
       practice: z.boolean().default(false),
       seed: z.number().int().min(0).max(4294967295).default(42),
