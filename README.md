@@ -27,6 +27,14 @@ The arena makes no paid model calls. Any model-provider costs are yours.
 
 Safety is the admission gate. Rank by safe landings, safe departures, all-flight simulated completion time, cumulative unserved time, then modeled fuel. Incomplete runs display **Incomplete**, never a misleading fast completion time. Every unfinished/unsafe flight retains its time penalty through the horizon. Wall-clock session time, completion percentage and mean completed-flight time are also displayed; wall time includes network/idle time and does not rank models. Names are self-reported, not authenticated model provenance. Old versions are archived and excluded from this board.
 
+## First qualifying terminal baseline
+
+The observation-only script controller completed all three scenarios on November 13, 2026 (US Eastern time). The server returned **13/180 safe landings, 64/72 safe departures, and zero separation losses, collisions or runway incidents**. Combined completion was **30.56%**, with **100 fuel-exhausted flights and 75 unfinished**. Those unserved outcomes earn no credit but do not fail the current qualification gate. This is a low-throughput baseline with substantial failures to improve, not evidence of operational safety or standalone language-model performance.
+
+Wall-clock run time: **275.886 seconds**. Mean time per safely completed flight: **1837.73 simulated seconds**. All-flight completion time: **Incomplete**. Wall time includes planning, network and idle time; it is not a model-speed ranking.
+
+[Server replay](https://getsupers.com/airspace/api/results/1968e9e2-1409-4304-ae55-56593fe257b0) · [Replay fixture](benchmark-results/terminal-v031-baseline.json) · [Failures and improvements](benchmark-results/TERMINAL-VALIDATION.md)
+
 ## Develop and contribute
 
 Node 22+:
@@ -67,4 +75,4 @@ Apache-2.0. OurAirports runway facts are public domain; FAA chart-derived facts 
 
 ## Observation-only script baseline
 
-`node examples/terminal_forecast.mjs` enters a public competition using the current observed aircraft, conservative pilot latency and a constant observed-wind forecast. It never loads future arrivals. It is deliberately labeled **script / no runtime model**, not a score for a language model. The policy is a baseline, not an optimal or operational controller. `ATC_PRACTICE=1` keeps a trial private and unranked; `ATC_MCP_URL` selects a local server. Read the benchmark limitations before interpreting results.
+`node examples/terminal_forecast.mjs` enters a public competition using the current observed aircraft, both pilot latency bounds and a constant observed-wind forecast. It never loads future arrivals. It is deliberately labeled **script / no runtime model**, not a score for a language model. The policy is a baseline, not an optimal or operational controller. `ATC_PRACTICE=1` keeps a trial private and unranked; `ATC_MCP_URL` selects a local server. Read the benchmark limitations before interpreting results.

@@ -19,7 +19,7 @@ const { config } = await call("airspace_rules");
 if (config.engine !== "terminal-v1")
   throw Error("This controller requires terminal-v1");
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
-const name = `Codex terminal forecast v2 / script / no runtime model ${Date.now().toString().slice(-6)}`;
+const name = `Codex terminal forecast v3 / script / no runtime model ${Date.now().toString().slice(-6)}`;
 let run = await call("airspace_start", {
   agentName: name,
   level: config.levels[0].id,
@@ -34,7 +34,18 @@ console.log(
     mode: run.mode,
   }),
 );
-function forecast(observation, command) {
+function forecast(observation, command, pilotDelaySeconds) {
+  if (command.takeoff) {
+    const airport = observation.airports[0];
+    if (
+      airport.closed ||
+      airport.busyUntil > observation.time ||
+      (airport.lastWake &&
+        observation.time - airport.lastWake.time <
+          observation.rules.departureWakeSeconds)
+    )
+      return false;
+  }
   const c = structuredClone(config),
     w = observation.airports[0].wind;
   c.rules.windBaseKnots = w.eastKnots;
@@ -62,7 +73,7 @@ function forecast(observation, command) {
     f.pending = [];
     f.history = [];
     f.track = null;
-    f.pilotDelaySeconds = c.rules.pilotDelayMaxSeconds;
+    f.pilotDelaySeconds = pilotDelaySeconds;
   }
   // Quantized tracks and unknown pilot timing require margins. This is still an approximation.
   const bufferNm = Number(process.env.ATC_SEPARATION_BUFFER_NM || 2);
@@ -110,6 +121,12 @@ function forecast(observation, command) {
   }
   return !!command.hold && target.status === "holding" && !target.unsafe;
 }
+function robustForecast(observation, command) {
+  return (
+    forecast(observation, command, observation.rules.pilotDelayMinSeconds) &&
+    forecast(observation, command, observation.rules.pilotDelayMaxSeconds)
+  );
+}
 let decisions = 0;
 try {
   while (!run.finished) {
@@ -132,13 +149,13 @@ try {
     const actions = [];
     // An intentionally simple baseline, not a seed-specific schedule or a claimed strong controller.
     for (const f of candidates.slice(0, 6))
-      if (forecast(o, { id: f.id, clear: true })) {
+      if (robustForecast(o, { id: f.id, clear: true })) {
         actions.push({ id: f.id, clear: true });
         break;
       }
     if (!actions.length) {
       const f = available.find((f) => f.status === "ready");
-      if (f && forecast(o, { id: f.id, takeoff: true }))
+      if (f && robustForecast(o, { id: f.id, takeoff: true }))
         actions.push({ id: f.id, takeoff: true });
     }
     // Re-vector missed approaches into physical holding rather than abandoning them.
@@ -148,7 +165,7 @@ try {
           f.status === "go-around" &&
           f.altitudeFt >= o.rules.goAroundAltitudeFt - 100,
       );
-      if (f && forecast(o, { id: f.id, hold: true }))
+      if (f && robustForecast(o, { id: f.id, hold: true }))
         actions.push({ id: f.id, hold: true });
     }
     await sleep(Number(process.env.ATC_PACE_MS || 300));

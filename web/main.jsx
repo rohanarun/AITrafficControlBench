@@ -10,7 +10,7 @@ const API =
   new URL("api", new URL(import.meta.env.BASE_URL, window.location.origin))
     .href;
 const MCP = "https://getsupers.com/airspace/mcp";
-const PROMPT = `Read https://getsupers.com/airspace/agent.md for the complete protocol. Compete in Airspace Arena and build the best air-traffic control automation you can. Connect to the public MCP server at ${MCP}. Read airspace_rules, then start the single hard San Diego challenge at level 6 with airspace_start using a unique agentName. Choose a unique leaderboard name that includes the model you are using, in the format "Controller name / exact model ID". Use the model identity exposed by your client or provider; do not guess. If it is unavailable, say "model unknown". For a script-only controller, say "script / no runtime model"; you may separately name the model that built it, if known. Keep the full name within 80 characters. Keep the returned sessionToken private. Use airspace_observe and airspace_act to maximize SAFE landings. Coordinate arrivals and departures on SAN runway09. Use headingDeg, altitudeFt, speedKnots, clear, hold, goAround and takeoff as documented. Allow for delayed pilot execution, sampled radar tracks, wind and heavy-aircraft wake spacing. Maximize safe completion, then reduce completion time and waiting. Never treat unfinished runs as fast completions. Every action needs the latest revision. An empty actions array advances time; steps can be 1–10. When scenarioComplete is true, call airspace_next. Repeat all 3 scenarios until finished so the server publishes the result. Inspect the leaderboard, analyze failures, improve your controller prompt or script, then retry the challenge with an improved controller. Read the effective per-tier rules; planes can collide and crash if commands are unsafe. Never claim a score that the server did not return. If MCP is unavailable, use the equivalent REST API documented at ${API.replace("/api", "/")}, with GET /rules, POST /sessions, GET /sessions/{id}, POST /sessions/{id}/actions, POST /sessions/{id}/next and GET /leaderboard. Send Authorization: Bearer <sessionToken> for session requests. Start body: {"agentName":"your-controller / your-model-id","level":6}. The service is free to access; any model-provider costs are yours.`;
+const PROMPT = `Read https://getsupers.com/airspace/agent.md for the complete protocol. Compete in Airspace Arena and build the best air-traffic control automation you can. Connect to the public MCP server at ${MCP}. Read airspace_rules, then start the single hard San Diego challenge at level 6 with airspace_start using a unique agentName. Choose a unique leaderboard name that includes the model you are using, in the format "Controller name / exact model ID". Use the model identity exposed by your client or provider; do not guess. If it is unavailable, say "model unknown". For a script-only controller, say "script / no runtime model"; you may separately name the model that built it, if known. Keep the full name within 80 characters. Keep the returned sessionToken private. Use airspace_observe and airspace_act to maximize SAFE landings. Coordinate arrivals and departures on SAN runway09. Use headingDeg, altitudeFt, speedKnots, clear, hold, goAround and takeoff as documented. Allow for delayed pilot execution, sampled radar tracks, wind and heavy-aircraft wake spacing. Maximize safe completion, then reduce completion time and waiting. Never treat unfinished runs as fast completions. Every action needs the latest revision. An empty actions array advances time; steps can be 1–10. When scenarioComplete is true, call airspace_next. Repeat all 3 scenarios until finished so the server publishes the result. Inspect the leaderboard, analyze failures, improve your controller prompt or script, then retry the challenge with an improved controller. Read the effective challenge rules; planes can collide and crash if commands are unsafe. Never claim a score that the server did not return. If MCP is unavailable, use the equivalent REST API documented at ${API.replace("/api", "/")}, with GET /rules, POST /sessions, GET /sessions/{id}, POST /sessions/{id}/actions, POST /sessions/{id}/next and GET /leaderboard. Send Authorization: Bearer <sessionToken> for session requests. Start body: {"agentName":"your-controller / your-model-id","level":6}. The service is free to access; any model-provider costs are yours.`;
 const clock = (t) =>
   `${String(Math.floor(t / 60)).padStart(2, "0")}:${String(t % 60).padStart(2, "0")}`;
 function Terminal({ sim, airport, closeView }) {
@@ -282,6 +282,9 @@ function App() {
                 departures
               </span>
               <span>
+                <b>{run.observation.score.fuelExhausted}</b> fuel exhausted
+              </span>
+              <span>
                 <b>{clock(run.observation.time)}</b> simulated
               </span>
               <span>
@@ -458,6 +461,7 @@ function App() {
                   <th>Safe landings</th>
                   <th>Safe departures</th>
                   <th>Completion</th>
+                  <th>Fuel exhausted / unfinished</th>
                   <th>Sim completion</th>
                   <th>Avg flight time</th>
                   <th>Wall time</th>
@@ -489,6 +493,9 @@ function App() {
                         {row.score.scheduledDepartures ?? 0}
                       </td>
                       <td>{row.score.safeCompletionPercent ?? 0}%</td>
+                      <td>
+                        {row.score.fuelExhausted} / {row.score.unfinished}
+                      </td>
                       <td title="Time until every flight completes safely, summed across scenarios">
                         {row.score.timeToCompleteSeconds == null
                           ? "Incomplete"

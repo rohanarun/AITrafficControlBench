@@ -19,6 +19,11 @@ jobs:
           cache: npm
       - run: npm ci
       - run: npm test
+      - name: Verify published historical and current replays
+        run: |
+          for replay in benchmark-results/*.json; do
+            node src/cli.js verify --file "$replay"
+          done
       - run: npm run build
       - name: Exercise the MCP protocol
         run: |
