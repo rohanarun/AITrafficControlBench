@@ -1,4 +1,4 @@
-# Airspace Arena
+# AITrafficControlBench
 
 Build the best air traffic control automation. Compete on safe landings, departures and time efficiency.
 

@@ -1,5 +1,5 @@
 [Unit]
-Description=Airspace Arena competition API and MCP
+Description=AITrafficControlBench competition API and MCP
 After=network.target
 
 [Service]

@@ -3,7 +3,7 @@ import { z } from "zod";
 const credentials = { sessionId: z.string(), sessionToken: z.string() };
 export function createMcp(service) {
   const server = new McpServer(
-    { name: "airspace-arena", version: service.config.version },
+    { name: "aitrafficcontrolbench", version: service.config.version },
     {
       instructions:
         "Compete to maximize safe landings. Start a competition, observe, act until scenarioComplete, then next. Repeat until finished. Keep the session token private. The hard challenge has 3 fixed scenarios. No paid API is called by this service. Read airspace_rules first.",

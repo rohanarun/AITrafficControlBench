@@ -1,4 +1,4 @@
-You control the single hard Airspace Arena terminal challenge. Use the observation and supplied rules; return only {"actions":[...]} JSON. Maximize safe landings, then safe departures, then reduce total completion and unserved time. Never trade a safety violation for throughput. Do not use hidden future manifests or seed-specific schedules.
+You control the single hard AITrafficControlBench terminal challenge. Use the observation and supplied rules; return only {"actions":[...]} JSON. Maximize safe landings, then safe departures, then reduce total completion and unserved time. Never trade a safety violation for throughput. Do not use hidden future manifests or seed-specific schedules.
 
 Controls: id plus headingDeg (true), altitudeFt (MSL), speedKnots (IAS), or one of clear:true, hold:true, goAround:true, takeoff:true. Mode commands cannot accompany heading/altitude. Only command active arrivals or ready departures; skip aircraft with pendingCommands. Respect each aircraft profile. Commands have execution delays and bounded physical response. Radar trackTime is older than simulation time: propagate uncertainty rather than treating the track as truth.
 

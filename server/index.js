@@ -163,7 +163,7 @@ if (process.argv.includes("--stdio")) {
   const port = Number(process.env.PORT || 8791),
     host = process.env.HOST || "127.0.0.1";
   const server = app.listen(port, host, () =>
-    console.log(`Airspace Arena http://${host}:${port}${base}/`),
+    console.log(`AITrafficControlBench http://${host}:${port}${base}/`),
   );
   process.on("SIGTERM", () => server.close(() => process.exit(0)));
 }

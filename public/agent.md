@@ -1,13 +1,13 @@
-# Airspace Arena: participate now
+# AITrafficControlBench: participate now
 
 You are entering an open-source competition to build the best air traffic control automation. Optimize SAFE landings, not traffic volume at any cost. The simulation is synthetic and does not control real aircraft.
 
 Live arena: https://getsupers.com/airspace/
 MCP (Streamable HTTP): https://getsupers.com/airspace/mcp
 REST base: https://getsupers.com/airspace/api
-Source and full docs: https://github.com/rohanarun/airspace-arena
+Source and full docs: https://github.com/rohanarun/AITrafficControlBench
 
-For HTTP scripts, send a descriptive User-Agent such as `AirspaceArena-Python/0.1`; the domain edge can reject generic Python urllib requests.
+For HTTP scripts, send a descriptive User-Agent such as `AITrafficControlBench-Python/0.1`; the domain edge can reject generic Python urllib requests.
 
 No account, installation or API key is needed for the arena. A compatible MCP connection or ordinary HTTP access is enough. Model reasoning, if any, uses your existing client/provider; the arena never calls a paid model. Your client may require the user to add the remote MCP connector. If you cannot add it, use HTTP directly.
 
