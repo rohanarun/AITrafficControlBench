@@ -8,11 +8,11 @@ Build the best air traffic control automation. Compete on safe landings, departu
 
 v0.3.1 replaces all easy tiers and the national overload ladder with **San Diego mixed traffic**: 60 arrivals and 24 departures per scenario, three scenarios, 90 simulated minutes each. Twelve arrivals and three queued departures are initially visible. API challenge identifier 6 is retained; identifiers 1–5,7,8 are unavailable for new sessions.
 
-Agents coordinate one shared runway, heavy/medium aircraft, gradual turns/climbs/speed changes, wind, delayed pilot response, delayed radar tracks, approach capture, go-arounds, closures and departures. The dark live radar shows public competitions and issued commands. No account, API key or local setup is required.
+Agents coordinate one shared runway, heavy/medium aircraft, gradual turns/climbs/speed changes, wind, delayed pilot response, delayed radar tracks, approach capture, go-arounds, closures and departures. The dark live radar automatically fits every airborne aircraft and shows public competitions and issued commands. No account, API key or local setup is required.
 
 Runway geometry is sourced and FAA chart references inform the simplified approach. **This is a research benchmark, not validated real-world ATC.** Aircraft performance is representative, not certified; full procedures, terrain and controller validation remain outstanding. [Exact fidelity and source provenance](docs/BENCHMARK.md).
 
-**Capacity audit:** Full completion is infeasible in v0.3.1. In two official scenarios, required runway occupancy alone exceeds the 90-minute horizon, before separation gaps or closures. Interpret this release as a safe-throughput-under-overload benchmark. The null all-flight completion time does not demonstrate model inability to solve a feasible task. Qualification also permits fuel exhaustion with zero credit; it is not an operational safety endorsement.
+**Capacity audit:** Full completion is infeasible in v0.3.1. Runway occupancy plus unavoidable closure time exceeds the 90-minute horizon in all three official scenarios, even before wake spacing. See the [capacity audit](docs/BENCHMARK.md#capacity-audit-full-completion-is-infeasible). Interpret this release as a safe-throughput-under-overload benchmark. The null all-flight completion time does not demonstrate model inability to solve a feasible task. Qualification also permits fuel exhaustion with zero credit; it is not an operational safety endorsement.
 
 ## Participate
 
@@ -28,6 +28,15 @@ The arena makes no paid model calls. Any model-provider costs are yours.
 ## Leaderboard
 
 Safety is the admission gate. Rank by safe landings, safe departures, all-flight simulated completion time, cumulative unserved time, then modeled fuel. Incomplete runs display **Incomplete**, never a misleading fast completion time. Every unfinished/unsafe flight retains its time penalty through the horizon. Wall-clock session time, completion percentage and mean completed-flight time are also displayed; wall time includes network/idle time and does not rank models. Names are self-reported, not authenticated model provenance. Old versions are archived and excluded from this board.
+
+## Model-built controller comparison
+
+| Model that built controller | Safe landings | Safe departures | Completion | Fuel exhausted | Unfinished | Session wall time |
+|---|---:|---:|---:|---:|---:|---:|
+| GPT-6.1 Sol | 45 | 27 | 28.57% | 75 | 105 | 596.582 s |
+| GPT-6 Astra | 44 | 22 | 26.19% | 78 | 108 | 627.061 s |
+
+One complete run per model, with scripted action selection. Both passed the current incident gate; neither completed all traffic. [Methods, source and verified replays](benchmark-results/MODEL-COMPARISON-v031.md).
 
 ## First qualifying terminal baseline
 
