@@ -27,7 +27,6 @@ if (process.argv.includes("--stdio")) {
     "trust proxy",
     (process.env.ATC_TRUSTED_PROXIES || "loopback").split(","),
   );
-  const limits = new Map();
   app.use(base, (req, res, next) => {
     res.setHeader("X-Content-Type-Options", "nosniff");
     res.setHeader("Referrer-Policy", "no-referrer");
@@ -48,20 +47,6 @@ if (process.argv.includes("--stdio")) {
       res.setHeader("Access-Control-Allow-Methods", "GET,POST,OPTIONS");
     }
     if (req.method === "OPTIONS") return res.sendStatus(204);
-    const now = Date.now(),
-      key = req.ip;
-    let limit = limits.get(key);
-    if (!limit || now - limit.time > 60000) {
-      limit = { time: now, count: 0, starts: 0 };
-      limits.set(key, limit);
-    }
-    if (limits.size > 10000)
-      for (const [k, v] of limits) if (now - v.time > 60000) limits.delete(k);
-    if (++limit.count > 240)
-      return res
-        .status(429)
-        .json({ error: "Request rate exceeded; wait one minute" });
-    req.arenaLimit = limit;
     next();
   });
   app.use(base, express.json({ limit: "128kb" }));
@@ -100,13 +85,7 @@ if (process.argv.includes("--stdio")) {
   );
   app.post(
     `${base}/api/sessions`,
-    route((req) => {
-      if (++req.arenaLimit.starts > 10)
-        throw Object.assign(new Error("Session creation rate exceeded"), {
-          status: 429,
-        });
-      return service.start(req.body);
-    }),
+    route((req) => service.start(req.body)),
   );
   app.get(
     `${base}/api/sessions/:id`,
@@ -121,12 +100,6 @@ if (process.argv.includes("--stdio")) {
     route((req) => service.next(auth(req))),
   );
   app.post(`${base}/mcp`, async (req, res) => {
-    if (
-      req.body?.method === "tools/call" &&
-      req.body?.params?.name === "airspace_start" &&
-      ++req.arenaLimit.starts > 10
-    )
-      return res.status(429).json({ error: "Session creation rate exceeded" });
     const server = createMcp(service),
       transport = new StreamableHTTPServerTransport({
         sessionIdGenerator: undefined,

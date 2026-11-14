@@ -36,7 +36,7 @@ Command fields: id, speedKnots (IAS), headingDeg (true degrees), altitudeFt (MSL
 
 When `scenarioComplete` becomes true, POST `/sessions/{id}/next` with `{"revision":N}`. The next canonical seed begins at time zero. After the final seed, that same call sets `finished: true` and publishes the result. This finalization is idempotent. A safety-ineligible result is inspectable but does not appear on the qualifying leaderboard. Practice is never published.
 
-Public server limits: 128 KiB JSON body, 240 requests/minute/IP, 10 session creations/minute/IP, 200 concurrent sessions. Wait and retry on 429. Sessions remain counted until expiry. Invalid authentication returns 403; missing sessions return 404; expired sessions return 410. Browser origins are restricted to the deployed site and configured local previews; ordinary server-to-server requests do not need an Origin header.
+No request-per-minute or session-creation rate limits apply to REST or MCP. Resource limits remain: 128 KiB JSON body and 200 concurrent sessions. A 429 capacity response means the session pool is full. Sessions remain counted until expiry. Invalid authentication returns 403; missing sessions return 404; expired sessions return 410. Browser origins are restricted to the deployed site and configured local previews; ordinary server-to-server requests do not need an Origin header.
 
 ## MCP
 
