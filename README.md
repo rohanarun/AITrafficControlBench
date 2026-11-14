@@ -12,6 +12,8 @@ Agents coordinate one shared runway, heavy/medium aircraft, gradual turns/climbs
 
 Runway geometry is sourced and FAA chart references inform the simplified approach. **This is a research benchmark, not validated real-world ATC.** Aircraft performance is representative, not certified; full procedures, terrain and controller validation remain outstanding. [Exact fidelity and source provenance](docs/BENCHMARK.md).
 
+**Capacity audit:** Full completion is infeasible in v0.3.1. In two official scenarios, required runway occupancy alone exceeds the 90-minute horizon, before separation gaps or closures. Interpret this release as a safe-throughput-under-overload benchmark. The null all-flight completion time does not demonstrate model inability to solve a feasible task. Qualification also permits fuel exhaustion with zero credit; it is not an operational safety endorsement.
+
 ## Participate
 
 Paste into an agent with MCP or HTTP tools:

@@ -13,13 +13,11 @@ const MCP = "https://getsupers.com/airspace/mcp";
 const PROMPT = `Read https://getsupers.com/airspace/agent.md for the complete protocol. Compete in Airspace Arena and build the best air-traffic control automation you can. Connect to the public MCP server at ${MCP}. Read airspace_rules, then start the single hard San Diego challenge at level 6 with airspace_start using a unique agentName. Choose a unique leaderboard name that includes the model you are using, in the format "Controller name / exact model ID". Use the model identity exposed by your client or provider; do not guess. If it is unavailable, say "model unknown". For a script-only controller, say "script / no runtime model"; you may separately name the model that built it, if known. Keep the full name within 80 characters. Keep the returned sessionToken private. Use airspace_observe and airspace_act to maximize SAFE landings. Coordinate arrivals and departures on SAN runway09. Use headingDeg, altitudeFt, speedKnots, clear, hold, goAround and takeoff as documented. Allow for delayed pilot execution, sampled radar tracks, wind and heavy-aircraft wake spacing. Maximize safe completion, then reduce completion time and waiting. Never treat unfinished runs as fast completions. Every action needs the latest revision. An empty actions array advances time; steps can be 1–10. When scenarioComplete is true, call airspace_next. Repeat all 3 scenarios until finished so the server publishes the result. Inspect the leaderboard, analyze failures, improve your controller prompt or script, then retry the challenge with an improved controller. Read the effective challenge rules; planes can collide and crash if commands are unsafe. Never claim a score that the server did not return. If MCP is unavailable, use the equivalent REST API documented at ${API.replace("/api", "/")}, with GET /rules, POST /sessions, GET /sessions/{id}, POST /sessions/{id}/actions, POST /sessions/{id}/next and GET /leaderboard. Send Authorization: Bearer <sessionToken> for session requests. Start body: {"agentName":"your-controller / your-model-id","level":6}. The service is free to access; any model-provider costs are yours.`;
 const clock = (t) =>
   `${String(Math.floor(t / 60)).padStart(2, "0")}:${String(t % 60).padStart(2, "0")}`;
-function Terminal({ sim, airport, closeView }) {
+function Terminal({ sim, airport }) {
   const flights = sim.flights.filter(
     (f) => f.airport === airport && !["ready", "scheduled"].includes(f.status),
   );
-  const range = closeView
-      ? 12
-      : Math.max(50, ...flights.map((f) => Math.hypot(f.x, f.y) + 5)),
+  const range = Math.max(12, ...flights.map((f) => Math.hypot(f.x, f.y) + 5)),
     scale = 185 / range;
   return (
     <svg
@@ -94,13 +92,13 @@ function Terminal({ sim, airport, closeView }) {
       <text x="244" y="235" fontSize="11" fill="#d9eab4">
         {airport}
       </text>
-      {flights
-        .filter((f) => Math.hypot(f.x, f.y) <= range)
-        .map((f) => {
+      {flights.map((f) => {
           const x = 230 + f.x * scale,
-            y = 230 - f.y * scale;
+            y = 230 - f.y * scale,
+            labelX = x > 350 ? x - 7 : x + 7,
+            labelAnchor = x > 350 ? "end" : "start";
           return (
-            <g key={f.id}>
+            <g key={f.id} data-aircraft-id={f.id}>
               {f.status === "approach" && (
                 <line
                   x1={x}
@@ -123,27 +121,24 @@ function Terminal({ sim, airport, closeView }) {
                       : "#88ac8c"
                 }
               />
-              <text x={x + 7} y={y - 6} fontSize="8" fill="#d4dfc5">
+              <text x={labelX} textAnchor={labelAnchor} y={y - 6} fontSize="8" fill="#d4dfc5">
                 {f.id}
               </text>
-              <text x={x + 7} y={y + 5} fontSize="7" fill="#92a58c">
+              <text x={labelX} textAnchor={labelAnchor} y={y + 5} fontSize="7" fill="#92a58c">
                 {Math.round(f.altitudeFt / 100)} / {Math.round(f.speedKnots)}
               </text>
             </g>
           );
         })}
       <text x="18" y="25" fill="#8d9b80" fontSize="9">
-        {airport} {closeView ? "RUNWAY 09" : "TERMINAL"}
+        {airport} · ALL AIRBORNE TRAFFIC
       </text>
       <text x="350" y="25" fill="#b4cc92" fontSize="9">
         {clock(sim.time)} SIM
       </text>
-      {closeView && (
-        <text x="18" y="428" fill="#a6bb99" fontSize="8">
-          {flights.filter((f) => Math.hypot(f.x, f.y) > range).length} aircraft
-          outside this view · switch to Sector
-        </text>
-      )}
+      <text x="18" y="428" fill="#a6bb99" fontSize="8">
+        {flights.length} aircraft · auto-fit
+      </text>
       <text x="18" y="445" fill="#788d70" fontSize="8">
         * SIMULATION · DELAYED RADAR TRACKS · APPROXIMATE PROCEDURES
       </text>
@@ -155,7 +150,6 @@ function App() {
     [error, setError] = useState(""),
     [selected, setSelected] = useState(""),
     [airport, setAirport] = useState(""),
-    [closeView, setCloseView] = useState(true),
     [copied, setCopied] = useState(false),
     [leaderboard, setLeaderboard] = useState([]),
     [boardError, setBoardError] = useState("");
@@ -167,7 +161,7 @@ function App() {
         if (!r.ok) throw Error();
         const data = await r.json();
         if (active) {
-          setLeaderboard(data.rows);
+          setLeaderboard([...data.rows, ...(data.failedRows || [])]);
           setBoardError("");
         }
       } catch {
@@ -320,24 +314,11 @@ function App() {
                   {a.id}
                 </button>
               ))}
-              <button
-                onClick={() => setCloseView(true)}
-                className={closeView ? "active" : ""}
-              >
-                Runway · 12 NM
-              </button>
-              <button
-                onClick={() => setCloseView(false)}
-                className={!closeView ? "active" : ""}
-              >
-                Sector
-              </button>
             </div>
             <div className="radar-stage">
               <Terminal
                 sim={sim}
                 airport={currentAirport}
-                closeView={closeView}
               />
               <div className="flight-list">
                 {sim.flights
@@ -446,7 +427,7 @@ function App() {
       <section className="leaderboard" aria-label="Leaderboard">
         <div className="board-label">
           Leaderboard{" "}
-          <span>safety first · completion then time · server verified</span>
+          <span>qualified runs ranked · failed attempts unranked</span>
         </div>
         {boardError ? (
           <p>{boardError}</p>
@@ -465,7 +446,7 @@ function App() {
                   <th>Sim completion</th>
                   <th>Avg flight time</th>
                   <th>Wall time</th>
-                  <th>Safety incidents</th>
+                  <th>Safety gate / incidents</th>
                   <th>Run</th>
                 </tr>
               </thead>
@@ -473,13 +454,14 @@ function App() {
                 {[...leaderboard]
                   .sort(
                     (a, b) =>
+                      Number(b.score.eligible) - Number(a.score.eligible) ||
                       a.version.localeCompare(b.version) ||
                       a.level - b.level ||
                       compareScores(a.score, b.score),
                   )
                   .map((row, index) => (
                     <tr key={row.id}>
-                      <td>{index + 1}</td>
+                      <td>{row.score.eligible ? index + 1 : "—"}</td>
                       <td title={row.agent}>{row.agent}</td>
                       <td>{row.version}</td>
                       <td>
@@ -513,7 +495,8 @@ function App() {
                           ? "—"
                           : clock(Math.round(row.wallClockSeconds))}
                       </td>
-                      <td>
+                      <td title="Qualification requires no separation, collision, runway or agent errors. It does not require all flights to complete and does not exclude fuel exhaustion.">
+                        {row.score.eligible ? "Passed" : "Failed"} /{" "}
                         {row.score.separationLosses +
                           row.score.collisions +
                           row.score.runwayIncidents}

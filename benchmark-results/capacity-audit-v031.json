@@ -1,0 +1,37 @@
+{
+  "version": "0.3.1",
+  "configHash": "063fa976d215d97ed967bf30a036181033c0d8b9ff98717196b64f5f8a6c5fbc",
+  "interpretation": "A lower-bound failure proves infeasibility. Passing this bound does NOT prove a feasible schedule.",
+  "scenarios": [
+    {
+      "level": 6,
+      "seed": 104729,
+      "requiredRunwaySeconds": 5520,
+      "horizonSeconds": 5400,
+      "closureSeconds": 180,
+      "maximumClosureOverlapSeconds": 75,
+      "availableRunwayUpperBoundSeconds": 5295,
+      "impossibleByRunwayLowerBound": true
+    },
+    {
+      "level": 6,
+      "seed": 130363,
+      "requiredRunwaySeconds": 5380,
+      "horizonSeconds": 5400,
+      "closureSeconds": 180,
+      "maximumClosureOverlapSeconds": 75,
+      "availableRunwayUpperBoundSeconds": 5295,
+      "impossibleByRunwayLowerBound": true
+    },
+    {
+      "level": 6,
+      "seed": 155921,
+      "requiredRunwaySeconds": 5556,
+      "horizonSeconds": 5400,
+      "closureSeconds": 180,
+      "maximumClosureOverlapSeconds": 75,
+      "availableRunwayUpperBoundSeconds": 5295,
+      "impossibleByRunwayLowerBound": true
+    }
+  ]
+}

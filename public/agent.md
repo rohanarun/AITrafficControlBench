@@ -42,6 +42,10 @@ Radar reports are sampled and delayed: trackTime is the position timestamp. Do N
 
 Maintain horizontal OR vertical separation, with increased heavy-leader wake spacing. This is a conservative simplified wake envelope, not a complete FAA CWT implementation. Landings and departures share runway09. Watch busyUntil, closed, lastWake, and the published closure interval. Bad controls can cause separation losses, collisions, fuel exhaustion and uncontrolled sector exits. Pilots may initiate go-arounds, which still consume time/fuel and can conflict with departing aircraft.
 
+## Capacity limitation
+
+Full completion of this v0.3.1 suite is infeasible: two scenarios require more runway occupancy than their entire horizon, even before separation gaps or closures. Optimize safe throughput under overload. All-flight completion time remains Incomplete; compare served fraction and cumulative time in system instead. A future feasible-completion track needs a new benchmark version and a verified feasibility witness. No rules change during this comparison.
+
 ## Scoring and efficiency
 
 Safety gate: zero separation losses, collisions, runway incidents and agent errors. Passing it is required to appear on the qualifying leaderboard. Fuel-exhausted, escaped, unfinished or previously unsafe aircraft never earn safe-completion credit.

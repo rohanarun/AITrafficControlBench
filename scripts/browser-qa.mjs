@@ -23,6 +23,23 @@ for (const [name, width, height] of [
     throw Error("Horizontal overflow");
   if (await page.getByText("Every landing", { exact: false }).count())
     throw Error("Removed hero still present");
+  const radar = await page.evaluate(() => {
+    const svg = document.querySelector("svg.terminal");
+    if (!svg) return null;
+    const bounds = svg.getBoundingClientRect();
+    const tracks = [...svg.querySelectorAll("[data-aircraft-id]")];
+    return {
+      count: tracks.length,
+      inside: tracks.every((track) => {
+        const r = track.querySelector("path").getBoundingClientRect();
+        return r.left >= bounds.left && r.right <= bounds.right &&
+          r.top >= bounds.top && r.bottom <= bounds.bottom;
+      }),
+      autoFit: svg.textContent.includes("auto-fit"),
+    };
+  });
+  if (radar && (!radar.inside || !radar.autoFit))
+    throw Error("Radar must automatically keep every aircraft in view");
   await page.screenshot({
     path: `.local/qa/${name}-minimal.png`,
     fullPage: true,

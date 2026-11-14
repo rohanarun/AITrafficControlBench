@@ -250,3 +250,13 @@ test("arrival generator never injects traffic into occupied holding cells across
     assert.equal(s.summary().collisions, 0);
   }
 });
+test("capacity audit exposes the frozen v0.3.1 suite as infeasible rather than blaming model completion", async () => {
+  const { auditCapacity } = await import("../scripts/capacity-audit.mjs");
+  const { configFor } = await import("../src/config.js");
+  const audit = auditCapacity(configFor("0.3.1"));
+  assert.deepEqual(
+    audit.scenarios.map((s) => s.requiredRunwaySeconds),
+    [5520, 5380, 5556],
+  );
+  assert.ok(audit.scenarios.every((s) => s.impossibleByRunwayLowerBound));
+});

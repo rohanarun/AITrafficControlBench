@@ -21,7 +21,7 @@ jobs:
       - run: npm test
       - name: Verify published historical and current replays
         run: |
-          for replay in benchmark-results/*.json; do
+          for replay in benchmark-results/baseline-level-*.json benchmark-results/terminal-*.json; do
             node src/cli.js verify --file "$replay"
           done
       - run: npm run build

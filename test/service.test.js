@@ -126,3 +126,21 @@ test("old sessions retain their original version after service upgrade", async (
   assert.equal(view.observation.version, c.version);
   assert.equal(view.observation.rules.fuelSeconds, c.rules.fuelSeconds);
 });
+test("failed completed attempts remain visible without entering qualified rankings", async (t) => {
+  const { s, c } = await setup(t);
+  const id = "11111111-1111-4111-8111-111111111111";
+  await s.save("results", id, {
+    id,
+    agent: "failed model",
+    version: c.version,
+    level: c.levels[0].id,
+    practice: false,
+    completedAt: "2026-11-13T00:00:00Z",
+    score: { eligible: false, safeLandings: 99, totalDelaySeconds: 1 },
+    episodes: [{ privateTrace: "omitted" }],
+  });
+  const board = await s.leaderboard();
+  assert.equal(board.rows.length, 0);
+  assert.equal(board.failedRows.length, 1);
+  assert.equal("episodes" in board.failedRows[0], false);
+});

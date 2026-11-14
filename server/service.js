@@ -308,7 +308,6 @@ export class ArenaService {
           await readFile(path.join(this.directory, "results", file), "utf8"),
         );
         if (
-          r.score.eligible &&
           !r.practice &&
           r.version === this.config.version &&
           this.config.levels.some((l) => l.id === r.level)
@@ -322,18 +321,23 @@ export class ArenaService {
           compareScores(a.score, b.score) ||
           a.completedAt.localeCompare(b.completedAt),
       );
-      // Best score for each self-reported display name per tier. Names are not verified identities.
-      const seen = new Set();
-      return {
-        version: this.config.version,
-        levels: this.config.levels,
-        verification: "server-executed",
-        rows: rows.filter((r) => {
+      // Keep qualified rankings separate from failed attempts; neither is a model-identity attestation.
+      const bestByName = (eligible) => {
+        const seen = new Set();
+        return rows.filter((r) => {
+          if (r.score.eligible !== eligible) return false;
           const key = `${r.version}:${r.level}:${r.agent}`;
           if (seen.has(key)) return false;
           seen.add(key);
           return true;
-        }),
+        });
+      };
+      return {
+        version: this.config.version,
+        levels: this.config.levels,
+        verification: "server-executed",
+        rows: bestByName(true),
+        failedRows: bestByName(false),
       };
     });
   }

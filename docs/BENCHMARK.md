@@ -49,3 +49,13 @@ Validation status: automated behavioral/regression tests and repeatable scenario
 ## v0.3.1 traffic correction
 
 The first live v0.3.0 baseline exposed an invalid initial condition: arrival numbers beyond40 reused occupied holding cells, causing separation losses at their spawn timestamps. v0.3.1 allocates additional radial cells after all altitude layers are used. This is a general traffic-generator correction, not a policy exemption or seed-specific adjustment. The v0.3.0 configuration and original allocation behavior remain replayable. Automated idle-holding regression tests cover all official seeds to prevent the generator from introducing conflicts without controller actions. Controllers remain responsible for conflicts created by their routing decisions.
+
+## Capacity audit: full completion is infeasible
+
+The original full-completion metric was not calibrated to a feasible workload. Run `node scripts/capacity-audit.mjs` to reproduce the audit. It inspects complete manifests for benchmark validation; competing controllers must not use this hidden future state.
+
+Required runway occupancy across the three scenarios is 5,520, 5,380 and 5,556 seconds. The horizon is 5,400 seconds with a 180-second closure. Even generously allowing a whole longest runway operation (75 seconds) to overlap closure start, runway availability is at most 5,295 seconds. All three scenarios exceed that upper bound, before any additional wake gaps, arrival positioning or departure handoff time. Thus no controller can safely complete all scheduled traffic under v0.3.1.
+
+This version remains frozen for comparable overload-throughput results. A null all-flight completion time is not evidence a model failed a feasible full-completion task. Meaningful comparisons are safe landings/departures, served fraction, unmet demand and time in system. Fuel exhaustion is an operational failure even though the current admission gate permits it with zero credit.
+
+Any future full-completion challenge must receive a new version and a verified feasible schedule witness, not merely pass this necessary runway-capacity bound. Passing a lower-bound test alone does not prove feasibility.
