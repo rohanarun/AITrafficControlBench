@@ -5,16 +5,16 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { StreamableHTTPServerTransport } from "@modelcontextprotocol/sdk/server/streamableHttp.js";
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
+import { PostgresArenaService } from "./postgres.js";
 import { ArenaService } from "./service.js";
 import { createMcp } from "./mcp.js";
 const root = fileURLToPath(new URL("../", import.meta.url));
 const config = JSON.parse(
   await readFile(path.join(root, "config/benchmark.json"), "utf8"),
 );
-const service = await new ArenaService(
-  config,
-  process.env.ATC_DATA_DIR || path.join(root, ".local/server-data"),
-  { versions },
+const service = await (process.env.ARENA_DATABASE_URL
+  ? new PostgresArenaService(config, process.env.ARENA_DATABASE_URL, { versions })
+  : new ArenaService(config, process.env.ATC_DATA_DIR || path.join(root, ".local/server-data"), { versions })
 ).init();
 if (process.argv.includes("--stdio")) {
   await createMcp(service).connect(new StdioServerTransport());

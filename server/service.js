@@ -42,15 +42,18 @@ export class ArenaService {
     await writeFile(temp, JSON.stringify(value), { mode: 0o600 });
     await rename(temp, target);
   }
+  async loadRecord(folder, id) {
+    return JSON.parse(await readFile(path.join(this.directory, folder, id + ".json"), "utf8"));
+  }
+  async *records(folder) {
+    for (const file of await readdir(path.join(this.directory, folder))) {
+      if (file.endsWith(".json")) yield await this.loadRecord(folder, file.slice(0, -5));
+    }
+  }
   async read(id) {
     if (!UUID.test(id)) throw fail("Unknown session", 404);
     try {
-      return JSON.parse(
-        await readFile(
-          path.join(this.directory, "sessions", `${id}.json`),
-          "utf8",
-        ),
-      );
+      return await this.loadRecord("sessions", id);
     } catch (e) {
       if (e.code === "ENOENT") throw fail("Unknown session", 404);
       throw e;
@@ -257,12 +260,7 @@ export class ArenaService {
       return this.liveCache.value;
     return this.serial(async () => {
       const runs = [];
-      for (const file of (
-        await readdir(path.join(this.directory, "sessions"))
-      ).filter((f) => f.endsWith(".json"))) {
-        const r = JSON.parse(
-          await readFile(path.join(this.directory, "sessions", file), "utf8"),
-        );
+      for await (const r of this.records("sessions")) {
         if (
           r.practice ||
           r.expiresAt < Date.now() ||
@@ -301,12 +299,7 @@ export class ArenaService {
   async leaderboard() {
     return this.serial(async () => {
       const rows = [];
-      for (const file of (
-        await readdir(path.join(this.directory, "results"))
-      ).filter((f) => f.endsWith(".json"))) {
-        const r = JSON.parse(
-          await readFile(path.join(this.directory, "results", file), "utf8"),
-        );
+      for await (const r of this.records("results")) {
         if (
           !r.practice &&
           r.version === this.config.version &&
@@ -344,12 +337,7 @@ export class ArenaService {
   async replay(id) {
     if (!UUID.test(id)) throw fail("Unknown result", 404);
     try {
-      return JSON.parse(
-        await readFile(
-          path.join(this.directory, "results", `${id}.json`),
-          "utf8",
-        ),
-      );
+      return await this.loadRecord("results", id);
     } catch (e) {
       if (e.code === "ENOENT") throw fail("Unknown result", 404);
       throw e;
